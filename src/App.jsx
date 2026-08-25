@@ -176,7 +176,7 @@ function fileSafe(str) {
 /* Small form atoms                                                        */
 /* ---------------------------------------------------------------------- */
 
-const DEGREE_OPTIONS = ['B.Tech', 'BE', 'B.Sc', 'BCA', 'BBA', 'MBA', 'M.Tech', 'ME', 'M.Sc', 'MCA', 'PhD', 'Diploma', 'High School', 'Associate Degree', 'MD'];
+const DEGREE_OPTIONS = ['B.Tech', 'Bachelor of Technology', 'BE', 'B.Sc', 'BCA', 'BBA', 'MBA', 'M.Tech', 'ME', 'M.Sc', 'MCA', 'PhD', 'Diploma', 'High School', 'Associate Degree', 'MD'];
 const FIELD_OF_STUDY_OPTIONS = ['Computer Science', 'Information Technology', 'Software Engineering', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Business Administration', 'Marketing', 'Finance', 'Accounting', 'Physics', 'Mathematics', 'Biology', 'Chemistry', 'Medicine', 'Law', 'Design', 'Architecture', 'Arts', 'Commerce'];
 
 function ComboboxField({ label, value, onChange, options, placeholder, className = "" }) {
