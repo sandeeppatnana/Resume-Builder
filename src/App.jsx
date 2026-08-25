@@ -1365,9 +1365,12 @@ function ResumeATS({ data, pageSettings }) {
         <Section title="Links" style={sectionOrderStyle(data, "links")}>
           <div className="flex flex-wrap gap-x-4">
             {data.links.map((l) => (
-              <a key={l.id} href={l.url} className="text-[11px] hover:underline" target="_blank" rel="noreferrer">
-                <span className="font-bold">{l.platform}</span>: {l.url}
-              </a>
+              <div key={l.id} className="text-[11px]">
+                <span className="font-bold">{l.platform}</span>:{" "}
+                <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:underline" target="_blank" rel="noreferrer">
+                  {l.url}
+                </a>
+              </div>
             ))}
           </div>
         </Section>
@@ -1575,9 +1578,12 @@ function ResumeModern({ data, pageSettings }) {
           <Section title="Links" accent={accent} style={sectionOrderStyle(data, "links")}>
             <div className="flex flex-wrap gap-x-4">
               {data.links.map((l) => (
-                <a key={l.id} href={l.url} className="text-[10.5px] font-medium text-slate-700 hover:opacity-80" target="_blank" rel="noreferrer">
-                  {l.platform}: <span style={{ color: accent }}>{l.url}</span>
-                </a>
+                <div key={l.id} className="text-[10.5px] font-medium text-slate-700">
+                  {l.platform}:{" "}
+                  <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:opacity-80" style={{ color: accent }} target="_blank" rel="noreferrer">
+                    {l.url}
+                  </a>
+                </div>
               ))}
             </div>
           </Section>
@@ -1789,9 +1795,12 @@ function ResumeMinimal({ data, pageSettings }) {
         <Section title="Links" style={sectionOrderStyle(data, "links")}>
           <div className="flex flex-wrap gap-x-4">
             {data.links.map((l) => (
-              <a key={l.id} href={l.url} className="text-[10.5px] font-normal text-slate-600 hover:text-slate-900" target="_blank" rel="noreferrer">
-                <span className="font-medium">{l.platform}</span>: {l.url}
-              </a>
+              <div key={l.id} className="text-[10.5px] font-normal text-slate-600">
+                <span className="font-medium">{l.platform}</span>:{" "}
+                <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:text-slate-900 hover:underline" target="_blank" rel="noreferrer">
+                  {l.url}
+                </a>
+              </div>
             ))}
           </div>
         </Section>
@@ -2038,9 +2047,12 @@ function ResumeProfessional({ data, pageSettings }) {
           <Section title="Links" style={sectionOrderStyle(data, "links")}>
             <div className="flex flex-wrap gap-x-4">
               {data.links.map((l) => (
-                <a key={l.id} href={l.url} className="text-[10px] font-normal text-slate-600 hover:text-slate-900" target="_blank" rel="noreferrer">
-                  <span className="font-semibold text-slate-800">{l.platform}</span>: {l.url}
-                </a>
+                <div key={l.id} className="text-[10px] font-normal text-slate-600">
+                  <span className="font-semibold text-slate-800">{l.platform}</span>:{" "}
+                  <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:text-slate-900 hover:underline" target="_blank" rel="noreferrer">
+                    {l.url}
+                  </a>
+                </div>
               ))}
             </div>
           </Section>

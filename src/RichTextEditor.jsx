@@ -103,7 +103,13 @@ export default function RichTextEditor({ value, onChange, placeholder, label }) 
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+
+    let finalUrl = url.trim();
+    if (finalUrl && !/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith('mailto:') && !finalUrl.startsWith('tel:')) {
+      finalUrl = `https://${finalUrl}`;
+    }
+
+    editor.chain().focus().extendMarkRange("link").setLink({ href: finalUrl }).run();
   };
 
   return (
