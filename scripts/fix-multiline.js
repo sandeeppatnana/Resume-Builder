@@ -1,0 +1,12 @@
+const fs = require('fs');
+let c = fs.readFileSync('src/App.jsx', 'utf8');
+c = c.replace(/<input(\s+value=\{value\}\s+placeholder=\{placeholder\}\s+onChange=\{\(e\) => onChange\(e\.target\.value\)\}\s+className="flex-1 [^"]+")\s*\/>/g, '<textarea rows={1}$1 resize-y min-h-[34px]" />');
+c = c.replace(/description: "([^"]+)", bullet: "([^"]+)"/g, 'description: "$1 whitespace-pre-wrap", bullet: "$2 whitespace-pre-wrap"');
+c = c.replace(/<p className="([^"]+)">\{summary\}<\/p>/g, '<p className="$1 whitespace-pre-wrap">{summary}</p>');
+c = c.replace(/<p className="([^"]+)">\{e\.summary\}<\/p>/g, '<p className="$1 whitespace-pre-wrap">{e.summary}</p>');
+c = c.replace(/<p className="([^"]+)">\{pr\.description\}<\/p>/g, '<p className="$1 whitespace-pre-wrap">{pr.description}</p>');
+c = c.replace(/<li key=\{i\} className="([^"]+)">\{r\}<\/li>/g, '<li key={i} className="$1 whitespace-pre-wrap">{r}</li>');
+c = c.replace(/<li key=\{i\} className="([^"]+)">\{h\}<\/li>/g, '<li key={i} className="$1 whitespace-pre-wrap">{h}</li>');
+c = c.replace(/<li key=\{i\} className="([^"]+) flex gap-1\.5">\s*<span style=\{\{\s*color:\s*accent\s*\}\}>\{"\\u2022"\}<\/span>\{([rh])\}\s*<\/li>/g, '<li key={i} className="$1 flex gap-1.5 items-start">\n                      <span className="mt-[3px] shrink-0" style={{ color: accent }}>{"\\u2022"}</span><span className="whitespace-pre-wrap">{$2}</span>\n                    </li>');
+fs.writeFileSync('src/App.jsx', c, 'utf8');
+console.log('Successfully updated!');
