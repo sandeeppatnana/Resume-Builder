@@ -107,59 +107,23 @@ async function writeResumeStorage(value) {
 function defaultData() {
   return {
     personal: {
-      fullName: "Sandeep Patnana",
-      title: "QA Engineer | Quality Engineering | AI/GenAI Testing",
-      email: "sandeep.patnana@email.com",
-      phone: { countryCode: "+91", number: "9876543210" },
-      location: "Hyderabad",
-      country: "India",
-      linkedin: "linkedin.com/in/sandeeppatnana",
-      github: "github.com/sandeeppatnana",
+      fullName: "",
+      title: "",
+      email: "",
+      phone: { countryCode: "+91", number: "" },
+      location: "",
+      country: "",
+      linkedin: "",
+      github: "",
       portfolio: "",
     },
-    summary:
-      "Detail-oriented QA Engineer with hands-on experience in functional, regression, API and end-to-end testing, defect management, and UAT coordination. Growing expertise in AI/GenAI testing, including LLM evaluation, prompt testing and RAG pipeline validation, within fast-paced Agile delivery teams.",
-    experience: [
-      {
-        id: uid("exp"),
-        jobTitle: "QA Engineer",
-        company: "Aurumi Tech Holdings Pvt Ltd",
-        location: "Hyderabad, India",
-        startDate: "Jun 2024",
-        endDate: "",
-        current: true,
-        summary: "",
-        responsibilities: [
-          "Designed and executed functional, regression, API and end-to-end testing.",
-          "Managed defects through JIRA.",
-          "Coordinated UAT activities.",
-          "Supported Agile/Scrum delivery.",
-        ],
-      },
-    ],
-    skillGroups: [
-      { id: uid("sg"), name: "Testing & Quality", skills: ["Functional Testing", "Regression Testing", "API Testing", "Performance Testing", "Mobile Testing", "UAT", "Defect Analysis"] },
-      { id: uid("sg"), name: "Tools & Technologies", skills: ["Postman", "K6", "Grafana", "Git", "GitHub", "SQL", "PostgreSQL", "JIRA"] },
-      { id: uid("sg"), name: "AI / GenAI", skills: ["LLM Testing", "Prompt Evaluation", "RAG Testing", "AI Test Case Design", "Model Evaluation", "Hallucination Testing"] },
-      { id: uid("sg"), name: "Project Coordination", skills: ["Requirement Analysis", "Sprint Coordination", "Stakeholder Coordination", "Release Coordination"] },
-    ],
-    projects: [
-      { id: uid("prj"), name: "API Test Suite \u2014 Authentication & CRUD Validation", description: "Built a reusable API automation suite covering authentication flows and CRUD operations, cutting manual regression time.", tools: "Postman, Newman, JavaScript", url: "", highlights: ["Automated 80+ API test cases across auth and CRUD endpoints.", "Integrated test runs into CI for early defect detection."] },
-      { id: uid("prj"), name: "Performance Testing \u2014 K6 & Grafana", description: "Set up load and performance test scenarios to validate system behavior under expected and peak traffic.", tools: "K6, Grafana", url: "", highlights: ["Modeled realistic load profiles for key user journeys.", "Built Grafana dashboards to visualize latency and throughput."] },
-      { id: uid("prj"), name: "GenAI Response Evaluation Framework", description: "A structured approach for evaluating LLM responses across accuracy, relevance, consistency, hallucination and safety.", tools: "Python, LLM APIs", url: "", highlights: ["Defined scoring rubrics across five evaluation dimensions.", "Ran systematic evaluations across multiple prompt variants."] },
-      { id: uid("prj"), name: "RAG Pipeline Evaluation", description: "Evaluated retrieval-augmented generation pipelines for relevance and factual grounding of retrieved context.", tools: "Python, Vector DB, LLM APIs", url: "", highlights: ["Assessed retrieval precision and answer groundedness.", "Flagged hallucination-prone query patterns for the team."] },
-      { id: uid("prj"), name: "Web & Mobile QA Regression Suite", description: "Maintained a cross-platform regression suite covering core web and mobile user flows.", tools: "Selenium, Appium", url: "", highlights: ["Reduced regression cycle time through prioritized test packs.", "Coordinated release sign-off with cross-functional teams."] },
-    ],
-    education: [
-      { id: uid("edu"), degree: "B.Tech", fieldOfStudy: "", institution: "Your University", location: "Hyderabad, India", startDate: "2019", endDate: "2023", grade: "", description: "" },
-    ],
-
-    Languages: [
-      { id: uid("lang"), name: "English", proficiency: "Professional" },
-    ],
-    certifications: [
-      { id: uid("cert"), name: "ISTQB Foundation Level", organization: "ISTQB", issueDate: "2023", url: "" },
-    ],
+    summary: "",
+    experience: [],
+    skillGroups: [],
+    projects: [],
+    education: [],
+    Languages: [],
+    certifications: [],
     achievements: [],
     links: [],
     internships: [],
@@ -535,9 +499,9 @@ function PersonalEditor({ data, update }) {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Field label="Full name" placeholder="John Doe" value={p.fullName} onChange={set("fullName")} />
-      <Field label="Professional title" placeholder="software enfineer" value={p.title} onChange={set("title")} />
-      <Field label="Email" type="email" placeholder="johndoe@gmail.com" value={p.email} onChange={set("email")} />
+      <Field label="Full name" placeholder="e.g. John Doe" value={p.fullName} onChange={set("fullName")} />
+      <Field label="Professional title" placeholder="e.g. Software Engineer" value={p.title} onChange={set("title")} />
+      <Field label="Email" type="email" placeholder="e.g. johndoe@email.com" value={p.email} onChange={set("email")} />
 
       <div>
         <span className="block text-xs font-medium text-slate-500 mb-1">Phone Number</span>
@@ -559,12 +523,12 @@ function PersonalEditor({ data, update }) {
         </div>
       </div>
 
-      <Field label="City / State" value={p.location} onChange={set("location")} />
-      <Field label="Country" value={p.country} onChange={set("country")} />
+      <Field label="City / State" placeholder="e.g. New York, NY" value={p.location} onChange={set("location")} />
+      <Field label="Country" placeholder="e.g. USA" value={p.country} onChange={set("country")} />
 
-      <Field label="LinkedIn" value={p.linkedin} onChange={set("linkedin")} />
-      <Field label="GitHub" value={p.github} onChange={set("github")} />
-      <Field label="Portfolio" value={p.portfolio} onChange={set("portfolio")} className="col-span-2" />
+      <Field label="LinkedIn" placeholder="e.g. linkedin.com/in/johndoe" value={p.linkedin} onChange={set("linkedin")} />
+      <Field label="GitHub" placeholder="e.g. github.com/johndoe" value={p.github} onChange={set("github")} />
+      <Field label="Portfolio" placeholder="e.g. johndoe.com" value={p.portfolio} onChange={set("portfolio")} className="col-span-2" />
     </div>
   );
 }
@@ -601,9 +565,9 @@ function ExperienceEditor({ data, update }) {
           drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Job title" value={exp.jobTitle} onChange={(v) => setItem(exp.id, { jobTitle: v })} />
-            <Field label="Company" value={exp.company} onChange={(v) => setItem(exp.id, { company: v })} />
-            <Field label="Location" value={exp.location} onChange={(v) => setItem(exp.id, { location: v })} />
+            <Field label="Job title" placeholder="e.g. QA Engineer" value={exp.jobTitle} onChange={(v) => setItem(exp.id, { jobTitle: v })} />
+            <Field label="Company" placeholder="e.g. Tech Corp" value={exp.company} onChange={(v) => setItem(exp.id, { company: v })} />
+            <Field label="Location" placeholder="e.g. Hyderabad, India" value={exp.location} onChange={(v) => setItem(exp.id, { location: v })} />
             <div className="flex items-end gap-2">
               <label className="flex items-center gap-1.5 text-xs text-slate-600 mb-2">
                 <input
@@ -615,7 +579,7 @@ function ExperienceEditor({ data, update }) {
                 Current position
               </label>
             </div>
-            <Field label="Start date" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} placeholder="Jun 2024" />
+            <Field label="Start date" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} placeholder="e.g. Jun 2024" />
             <Field
               label="End date"
               value={exp.current ? "Present" : exp.endDate}
@@ -626,6 +590,7 @@ function ExperienceEditor({ data, update }) {
           </div>
           <RichTextEditor
             label="Description & Responsibilities"
+            placeholder="Describe your role and key achievements..."
             value={exp.summary?.includes('<') ? normalizeToHtml(exp.summary) : normalizeToHtml(exp.summary) + normalizeToHtml(exp.responsibilities)}
             onChange={(v) => setItem(exp.id, { summary: v, responsibilities: [] })}
           />
@@ -752,9 +717,10 @@ function ProjectsEditor({ data, update }) {
           canDown={i < list.length - 1}
           drag={dragProps(i)}
         >
-          <Field label="Project name" value={prj.name} onChange={(v) => setItem(prj.id, { name: v })} />
+          <Field label="Project name" placeholder="e.g. E-Commerce Backend" value={prj.name} onChange={(v) => setItem(prj.id, { name: v })} />
           <RichTextEditor
             label="Description & Highlights"
+            placeholder="Explain the project scope and what you accomplished..."
             value={prj.description?.includes('<') ? normalizeToHtml(prj.description) : normalizeToHtml(prj.description) + normalizeToHtml(prj.highlights)}
             onChange={(v) => setItem(prj.id, { description: v, highlights: [] })}
           />
@@ -794,14 +760,15 @@ function EducationEditor({ data, update }) {
           <div className="grid grid-cols-2 gap-3">
             <ComboboxField label="Degree" value={edu.degree} onChange={(v) => setItem(edu.id, { degree: v })} options={DEGREE_OPTIONS} placeholder="e.g. B.Tech" />
             <ComboboxField label="Field of Study" value={edu.fieldOfStudy} onChange={(v) => setItem(edu.id, { fieldOfStudy: v })} options={FIELD_OF_STUDY_OPTIONS} placeholder="e.g. Computer Science" />
-            <Field label="Institution" value={edu.institution} onChange={(v) => setItem(edu.id, { institution: v })} />
-            <Field label="Location" value={edu.location} onChange={(v) => setItem(edu.id, { location: v })} />
-            <Field label="Grade / CGPA" value={edu.grade} onChange={(v) => setItem(edu.id, { grade: v })} />
-            <Field label="Start date" value={edu.startDate} onChange={(v) => setItem(edu.id, { startDate: v })} />
-            <Field label="End date" value={edu.endDate} onChange={(v) => setItem(edu.id, { endDate: v })} />
+            <Field label="Institution" placeholder="e.g. Tech University" value={edu.institution} onChange={(v) => setItem(edu.id, { institution: v })} />
+            <Field label="Location" placeholder="e.g. New York, NY" value={edu.location} onChange={(v) => setItem(edu.id, { location: v })} />
+            <Field label="Grade / CGPA" placeholder="e.g. 3.8/4.0" value={edu.grade} onChange={(v) => setItem(edu.id, { grade: v })} />
+            <Field label="Start date" placeholder="e.g. Aug 2019" value={edu.startDate} onChange={(v) => setItem(edu.id, { startDate: v })} />
+            <Field label="End date" placeholder="e.g. May 2023" value={edu.endDate} onChange={(v) => setItem(edu.id, { endDate: v })} />
           </div>
           <RichTextEditor
             label="Description"
+            placeholder="Any awards or extracurriculars?..."
             value={normalizeToHtml(edu.description)}
             onChange={(v) => setItem(edu.id, { description: v })}
           />
@@ -839,10 +806,10 @@ function CertificationsEditor({ data, update }) {
           drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Name" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
-            <Field label="Organization" value={c.organization} onChange={(v) => setItem(c.id, { organization: v })} />
-            <Field label="Issue Date" value={c.issueDate} onChange={(v) => setItem(c.id, { issueDate: v })} />
-            <Field label="Link" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
+            <Field label="Name" placeholder="e.g. Certified Cloud Practitioner" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
+            <Field label="Organization" placeholder="e.g. Amazon Web Services" value={c.organization} onChange={(v) => setItem(c.id, { organization: v })} />
+            <Field label="Issue Date" placeholder="e.g. Jan 2024" value={c.issueDate} onChange={(v) => setItem(c.id, { issueDate: v })} />
+            <Field label="Link" placeholder="e.g. credly.com/verify/..." value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
           </div>
         </EntryCard>
       ))}
@@ -872,11 +839,11 @@ function AchievementsEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Title" value={c.title} onChange={(v) => setItem(c.id, { title: v })} />
-            <Field label="Organization" value={c.organization} onChange={(v) => setItem(c.id, { organization: v })} />
-            <Field label="Date" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
+            <Field label="Title" placeholder="e.g. Employee of the Month" value={c.title} onChange={(v) => setItem(c.id, { title: v })} />
+            <Field label="Organization" placeholder="e.g. Tech Corp" value={c.organization} onChange={(v) => setItem(c.id, { organization: v })} />
+            <Field label="Date" placeholder="e.g. Dec 2023" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
+          <RichTextEditor label="Description" placeholder="Details about this achievement..." value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("ach"), title: "", organization: "", date: "", description: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -929,7 +896,7 @@ function LinksEditor({ data, update }) {
         >
           <div className="grid grid-cols-2 gap-3">
             <Field label="Platform Name" value={c.platform} onChange={(v) => setItem(c.id, { platform: v })} placeholder="e.g. Medium, Twitter" />
-            <Field label="URL" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
+            <Field label="URL" placeholder="e.g. medium.com/@johndoe" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
           </div>
         </EntryCard>
       ))}
@@ -955,14 +922,14 @@ function InternshipsEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Role" value={exp.jobTitle} onChange={(v) => setItem(exp.id, { jobTitle: v })} />
-            <Field label="Company" value={exp.company} onChange={(v) => setItem(exp.id, { company: v })} />
-            <Field label="Location" value={exp.location} onChange={(v) => setItem(exp.id, { location: v })} />
+            <Field label="Role" placeholder="e.g. Software Engineering Intern" value={exp.jobTitle} onChange={(v) => setItem(exp.id, { jobTitle: v })} />
+            <Field label="Company" placeholder="e.g. Tech Corp" value={exp.company} onChange={(v) => setItem(exp.id, { company: v })} />
+            <Field label="Location" placeholder="e.g. Remote" value={exp.location} onChange={(v) => setItem(exp.id, { location: v })} />
             <div />
-            <Field label="Start date" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} />
-            <Field label="End date" value={exp.endDate} onChange={(v) => setItem(exp.id, { endDate: v })} />
+            <Field label="Start date" placeholder="e.g. May 2022" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} />
+            <Field label="End date" placeholder="e.g. Aug 2022" value={exp.endDate} onChange={(v) => setItem(exp.id, { endDate: v })} />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(exp.summary)} onChange={(v) => setItem(exp.id, { summary: v })} />
+          <RichTextEditor label="Description" placeholder="What did you build or learn?" value={normalizeToHtml(exp.summary)} onChange={(v) => setItem(exp.id, { summary: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("int"), jobTitle: "", company: "", location: "", startDate: "", endDate: "", summary: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -987,12 +954,12 @@ function CoursesEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Course Name" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
-            <Field label="Provider" value={c.provider} onChange={(v) => setItem(c.id, { provider: v })} />
-            <Field label="Completion Date" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
-            <Field label="Credential/URL" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
+            <Field label="Course Name" placeholder="e.g. Machine Learning" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
+            <Field label="Provider" placeholder="e.g. Coursera" value={c.provider} onChange={(v) => setItem(c.id, { provider: v })} />
+            <Field label="Completion Date" placeholder="e.g. Oct 2023" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
+            <Field label="Credential/URL" placeholder="e.g. coursera.org/verify/..." value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
+          <RichTextEditor label="Description" placeholder="Topics covered..." value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("crs"), name: "", provider: "", date: "", url: "", description: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -1017,12 +984,12 @@ function VolunteeringEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Organization" value={exp.organization} onChange={(v) => setItem(exp.id, { organization: v })} />
-            <Field label="Role" value={exp.role} onChange={(v) => setItem(exp.id, { role: v })} />
-            <Field label="Start date" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} />
-            <Field label="End date" value={exp.endDate} onChange={(v) => setItem(exp.id, { endDate: v })} />
+            <Field label="Organization" placeholder="e.g. Red Cross" value={exp.organization} onChange={(v) => setItem(exp.id, { organization: v })} />
+            <Field label="Role" placeholder="e.g. Volunteer" value={exp.role} onChange={(v) => setItem(exp.id, { role: v })} />
+            <Field label="Start date" placeholder="e.g. Jan 2021" value={exp.startDate} onChange={(v) => setItem(exp.id, { startDate: v })} />
+            <Field label="End date" placeholder="e.g. Present" value={exp.endDate} onChange={(v) => setItem(exp.id, { endDate: v })} />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(exp.description)} onChange={(v) => setItem(exp.id, { description: v })} />
+          <RichTextEditor label="Description" placeholder="Impact of your work..." value={normalizeToHtml(exp.description)} onChange={(v) => setItem(exp.id, { description: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("vol"), organization: "", role: "", startDate: "", endDate: "", description: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -1047,12 +1014,12 @@ function PublicationsEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Title" value={c.title} onChange={(v) => setItem(c.id, { title: v })} />
-            <Field label="Publisher" value={c.publisher} onChange={(v) => setItem(c.id, { publisher: v })} />
-            <Field label="Publication Date" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
-            <Field label="URL" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
+            <Field label="Title" placeholder="e.g. React Performance Patterns" value={c.title} onChange={(v) => setItem(c.id, { title: v })} />
+            <Field label="Publisher" placeholder="e.g. Tech Blog" value={c.publisher} onChange={(v) => setItem(c.id, { publisher: v })} />
+            <Field label="Publication Date" placeholder="e.g. Feb 2024" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
+            <Field label="URL" placeholder="e.g. techblog.com/react-perf" value={c.url} onChange={(v) => setItem(c.id, { url: v })} />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
+          <RichTextEditor label="Description" placeholder="Abstract or summary..." value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("pub"), title: "", publisher: "", date: "", url: "", description: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -1076,7 +1043,7 @@ function InterestsEditor({ data, update }) {
           onMoveUp={() => setList(moveItem(list, i, -1))} onMoveDown={() => setList(moveItem(list, i, 1))}
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
-          <Field label="Interest / Hobby" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
+          <Field label="Interest / Hobby" placeholder="e.g. Photography, Hiking" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("int"), name: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
@@ -1095,7 +1062,7 @@ function CustomSectionEditor({ data, update }) {
   const setItem = (id, patch) => setList(list.map(item => item.id === id ? { ...item, ...patch } : item));
   return (
     <div className="space-y-3">
-      <Field label="Section Title" value={customSection.sectionTitle} onChange={(v) => setSection({ sectionTitle: v })} />
+      <Field label="Section Title" placeholder="e.g. Publications" value={customSection.sectionTitle} onChange={(v) => setSection({ sectionTitle: v })} />
       <hr className="border-slate-200 my-2" />
       {list.map((c, i) => (
         <EntryCard
@@ -1105,11 +1072,11 @@ function CustomSectionEditor({ data, update }) {
           canUp={i > 0} canDown={i < list.length - 1} drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Entry Title" value={c.entryTitle} onChange={(v) => setItem(c.id, { entryTitle: v })} />
-            <Field label="Date" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
-            <Field label="URL" value={c.url} onChange={(v) => setItem(c.id, { url: v })} className="col-span-2" />
+            <Field label="Entry Title" placeholder="e.g. My Custom Entry" value={c.entryTitle} onChange={(v) => setItem(c.id, { entryTitle: v })} />
+            <Field label="Date" placeholder="e.g. 2024" value={c.date} onChange={(v) => setItem(c.id, { date: v })} />
+            <Field label="URL" placeholder="e.g. mywebsite.com" value={c.url} onChange={(v) => setItem(c.id, { url: v })} className="col-span-2" />
           </div>
-          <RichTextEditor label="Description" value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
+          <RichTextEditor label="Description" placeholder="Add some details..." value={normalizeToHtml(c.description)} onChange={(v) => setItem(c.id, { description: v })} />
         </EntryCard>
       ))}
       <button type="button" onClick={() => setList([...list, { id: uid("cust"), entryTitle: "", date: "", url: "", description: "" }])} className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800">
