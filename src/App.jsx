@@ -138,7 +138,7 @@ function defaultData() {
       { id: uid("prj"), name: "Web & Mobile QA Regression Suite", description: "Maintained a cross-platform regression suite covering core web and mobile user flows.", tools: "Selenium, Appium", url: "", highlights: ["Reduced regression cycle time through prioritized test packs.", "Coordinated release sign-off with cross-functional teams."] },
     ],
     education: [
-      { id: uid("edu"), degree: "B.Tech in Computer Science", institution: "Your University", location: "Hyderabad, India", startDate: "2019", endDate: "2023", grade: "", description: "" },
+      { id: uid("edu"), degree: "B.Tech", fieldOfStudy: "", institution: "Your University", location: "Hyderabad, India", startDate: "2019", endDate: "2023", grade: "", description: "" },
     ],
 
     Languages: [
@@ -175,6 +175,62 @@ function fileSafe(str) {
 /* ---------------------------------------------------------------------- */
 /* Small form atoms                                                        */
 /* ---------------------------------------------------------------------- */
+
+const DEGREE_OPTIONS = ['B.Tech', 'BE', 'B.Sc', 'BCA', 'BBA', 'MBA', 'M.Tech', 'ME', 'M.Sc', 'MCA', 'PhD', 'Diploma', 'High School', 'Associate Degree', 'MD'];
+const FIELD_OF_STUDY_OPTIONS = ['Computer Science', 'Information Technology', 'Software Engineering', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Business Administration', 'Marketing', 'Finance', 'Accounting', 'Physics', 'Mathematics', 'Biology', 'Chemistry', 'Medicine', 'Law', 'Design', 'Architecture', 'Arts', 'Commerce'];
+
+function ComboboxField({ label, value, onChange, options, placeholder, className = "" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt =>
+    opt.toLowerCase().includes((value || "").toLowerCase())
+  );
+
+  return (
+    <label className={`block relative ${className}`.trim()} ref={wrapperRef}>
+      <span className="block text-xs font-medium text-slate-500 mb-1">{label}</span>
+      <input
+        type="text"
+        value={value || ""}
+        placeholder={placeholder}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+      />
+      {isOpen && filteredOptions.length > 0 && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-48 overflow-auto">
+          {filteredOptions.map((opt) => (
+            <li
+              key={opt}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(opt);
+                setIsOpen(false);
+              }}
+              className="px-3 py-2 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 cursor-pointer"
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+    </label>
+  );
+}
 
 function Field({ label, value, onChange, placeholder, type = "text", className = "" }) {
   return (
@@ -723,7 +779,8 @@ function EducationEditor({ data, update }) {
           drag={dragProps(i)}
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Degree" value={edu.degree} onChange={(v) => setItem(edu.id, { degree: v })} />
+            <ComboboxField label="Degree" value={edu.degree} onChange={(v) => setItem(edu.id, { degree: v })} options={DEGREE_OPTIONS} placeholder="e.g. B.Tech" />
+            <ComboboxField label="Field of Study" value={edu.fieldOfStudy} onChange={(v) => setItem(edu.id, { fieldOfStudy: v })} options={FIELD_OF_STUDY_OPTIONS} placeholder="e.g. Computer Science" />
             <Field label="Institution" value={edu.institution} onChange={(v) => setItem(edu.id, { institution: v })} />
             <Field label="Location" value={edu.location} onChange={(v) => setItem(edu.id, { location: v })} />
             <Field label="Grade / CGPA" value={edu.grade} onChange={(v) => setItem(edu.id, { grade: v })} />
@@ -739,7 +796,7 @@ function EducationEditor({ data, update }) {
       ))}
       <button
         type="button"
-        onClick={() => setList([...list, { id: uid("edu"), degree: "", institution: "", location: "", startDate: "", endDate: "", grade: "" }])}
+        onClick={() => setList([...list, { id: uid("edu"), degree: "", fieldOfStudy: "", institution: "", location: "", startDate: "", endDate: "", grade: "" }])}
         className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800"
       >
         <Plus size={14} /> Add education
@@ -1263,7 +1320,7 @@ function ResumeATS({ data, pageSettings }) {
             <div key={ed.id} className="mb-1.5 last:mb-0 break-inside-avoid">
               <div className="flex justify-between items-baseline">
                 <div>
-                  <p className="text-[11.5px] font-bold">{ed.degree}</p>
+                  <p className="text-[11.5px] font-bold">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                   <p className="text-[11px]">{ed.institution}{ed.location && `, ${ed.location}`}{ed.grade && ` \u2014 ${ed.grade}`}</p>
                 </div>
                 <span className="text-[11px]">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
@@ -1471,7 +1528,7 @@ function ResumeModern({ data, pageSettings }) {
           <Section title="Education" accent={accent} style={sectionOrderStyle(data, "education")}>
             {education.map((ed) => (
               <div key={ed.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-                <p className="text-[11px] font-semibold text-slate-900">{ed.degree}</p>
+                <p className="text-[11px] font-semibold text-slate-900">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                 <p className="text-[10.5px] text-slate-600">{ed.institution}</p>
                 <p className="text-[10px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
                 {ed.description && (
@@ -1683,7 +1740,7 @@ function ResumeMinimal({ data, pageSettings }) {
             <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
               <div className="flex justify-between items-baseline">
                 <div>
-                  <p className="text-[11px] font-medium text-slate-900">{ed.degree}</p>
+                  <p className="text-[11px] font-medium text-slate-900">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                   <p className="text-[10.5px] text-slate-500">{ed.institution}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
                 </div>
                 <span className="text-[10px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
@@ -1859,7 +1916,7 @@ function ResumeProfessional({ data, pageSettings }) {
             <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Education</h2>
             {education.map((ed) => (
               <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <p className="text-[10px] font-semibold text-slate-800">{ed.degree}</p>
+                <p className="text-[10px] font-semibold text-slate-800">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                 <p className="text-[9.5px] text-slate-600">{ed.institution}</p>
                 <p className="text-[9px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
               </div>
@@ -1933,7 +1990,7 @@ function ResumeProfessional({ data, pageSettings }) {
           <Section title="Education" style={sectionOrderStyle(data, "education")}>
             {education.map((ed) => (
               <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <p className="text-[10px] font-semibold text-slate-800">{ed.degree}</p>
+                <p className="text-[10px] font-semibold text-slate-800">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                 <p className="text-[9.5px] text-slate-600">{ed.institution}</p>
                 <p className="text-[9px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
                 {ed.description && (
