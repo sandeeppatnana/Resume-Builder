@@ -15,11 +15,24 @@ export function normalizeToHtml(value) {
   }
   if (typeof value === "string") {
     if (!value.trim()) return "";
+
+    let html = value;
     const lower = value.toLowerCase();
-    if (lower.includes("<p>") || lower.includes("<ul>") || lower.includes("<li>") || lower.includes("<h1>") || lower.includes("<h2>") || lower.includes("<blockquote>")) {
-      return value;
+
+    if (!(lower.includes("<p>") || lower.includes("<ul>") || lower.includes("<li>") || lower.includes("<h1>") || lower.includes("<h2>") || lower.includes("<blockquote>"))) {
+      html = value.split("\n").filter(Boolean).map(line => `<p>${line}</p>`).join("");
     }
-    return value.split("\n").filter(Boolean).map(line => `<p>${line}</p>`).join("");
+
+    // Automatically fix missing link protocols for all anchor tags
+    html = html.replace(/href=(["'])(.*?)\1/gi, (match, quote, url) => {
+      let finalUrl = url.trim();
+      if (finalUrl && !/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith('mailto:') && !finalUrl.startsWith('tel:') && !finalUrl.startsWith('#')) {
+        finalUrl = `https://${finalUrl}`;
+      }
+      return `href="${finalUrl}"`;
+    });
+
+    return html;
   }
   return "";
 }
@@ -522,9 +535,9 @@ function PersonalEditor({ data, update }) {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Field label="Full name" value={p.fullName} onChange={set("fullName")} />
-      <Field label="Professional title" value={p.title} onChange={set("title")} />
-      <Field label="Email" type="email" value={p.email} onChange={set("email")} />
+      <Field label="Full name" placeholder="John Doe" value={p.fullName} onChange={set("fullName")} />
+      <Field label="Professional title" placeholder="software enfineer" value={p.title} onChange={set("title")} />
+      <Field label="Email" type="email" placeholder="johndoe@gmail.com" value={p.email} onChange={set("email")} />
 
       <div>
         <span className="block text-xs font-medium text-slate-500 mb-1">Phone Number</span>
@@ -613,7 +626,7 @@ function ExperienceEditor({ data, update }) {
           </div>
           <RichTextEditor
             label="Description & Responsibilities"
-            value={exp.summary?.includes('<') ? exp.summary : normalizeToHtml(exp.summary) + normalizeToHtml(exp.responsibilities)}
+            value={exp.summary?.includes('<') ? normalizeToHtml(exp.summary) : normalizeToHtml(exp.summary) + normalizeToHtml(exp.responsibilities)}
             onChange={(v) => setItem(exp.id, { summary: v, responsibilities: [] })}
           />
         </EntryCard>
@@ -742,7 +755,7 @@ function ProjectsEditor({ data, update }) {
           <Field label="Project name" value={prj.name} onChange={(v) => setItem(prj.id, { name: v })} />
           <RichTextEditor
             label="Description & Highlights"
-            value={prj.description?.includes('<') ? prj.description : normalizeToHtml(prj.description) + normalizeToHtml(prj.highlights)}
+            value={prj.description?.includes('<') ? normalizeToHtml(prj.description) : normalizeToHtml(prj.description) + normalizeToHtml(prj.highlights)}
             onChange={(v) => setItem(prj.id, { description: v, highlights: [] })}
           />
         </EntryCard>
@@ -1120,7 +1133,7 @@ function CustomFieldCard({ field, onChange, onDelete, drag }) {
       <Field label="Section title" value={field.title} onChange={(value) => onChange({ title: value })} placeholder="Awards, Publications, Volunteer work..." />
       <RichTextEditor
         label="Content / Description"
-        value={field.description?.includes('<') ? field.description : normalizeToHtml(field.description) + normalizeToHtml(field.bullets)}
+        value={field.description?.includes('<') ? normalizeToHtml(field.description) : normalizeToHtml(field.description) + normalizeToHtml(field.bullets)}
         onChange={(value) => onChange({ description: value, bullets: [] })}
       />
     </EntryCard>
@@ -1157,7 +1170,7 @@ function CustomFieldSection({ field, style, variant = "ats" }) {
     <section className={styles.wrapper + " break-inside-avoid"} style={style}>
       {field.title && <h2 className={styles.heading}>{field.title}</h2>}
       {(field.description || bullets.length > 0) && (
-        <div className={`resume-richtext ${styles.description}`} dangerouslySetInnerHTML={{ __html: field.description?.includes('<') ? field.description : normalizeToHtml(field.description) + normalizeToHtml(bullets) }} />
+        <div className={`resume-richtext ${styles.description}`} dangerouslySetInnerHTML={{ __html: field.description?.includes('<') ? normalizeToHtml(field.description) : normalizeToHtml(field.description) + normalizeToHtml(bullets) }} />
       )}
     </section>
   );
@@ -1282,7 +1295,7 @@ function ResumeATS({ data, pageSettings }) {
                 <span>{e.location}</span>
               </div>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
-                <div className="text-[11px] mt-1 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? e.summary : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
+                <div className="text-[11px] mt-1 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
               )}
             </div>
           ))}
@@ -1306,7 +1319,7 @@ function ResumeATS({ data, pageSettings }) {
             <div key={pr.id} className="mb-2 last:mb-0 break-inside-avoid">
               <p className="text-[12px] font-bold">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
-                <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? pr.description : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
+                <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
               {pr.tools && <p className="text-[11px] italic mt-0.5">Tools: {pr.tools}</p>}
             </div>
@@ -1492,7 +1505,7 @@ function ResumeModern({ data, pageSettings }) {
                 <span className="text-slate-500">{e.location}</span>
               </div>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
-                <div className="text-[11px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? e.summary : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
+                <div className="text-[11px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
               )}
             </div>
           ))}
@@ -1518,7 +1531,7 @@ function ResumeModern({ data, pageSettings }) {
             <div key={pr.id} className="mb-2.5 last:mb-0 break-inside-avoid">
               <p className="text-[12px] font-semibold text-slate-900">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
-                <div className="text-[11px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? pr.description : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
+                <div className="text-[11px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
               {pr.tools && <p className="text-[10.5px] mt-0.5" style={{ color: accent }}>{pr.tools}</p>}
             </div>
@@ -1709,7 +1722,7 @@ function ResumeMinimal({ data, pageSettings }) {
               </div>
               <p className="text-[11px] text-slate-500">{e.company}{e.location && `, ${e.location}`}</p>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
-                <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? e.summary : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
+                <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
               )}
             </div>
           ))}
@@ -1732,7 +1745,7 @@ function ResumeMinimal({ data, pageSettings }) {
             <div key={pr.id} className="mb-3 last:mb-0 break-inside-avoid">
               <p className="text-[11.5px] font-medium text-slate-900">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
-                <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? pr.description : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
+                <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
               {pr.tools && <p className="text-[10px] mt-0.5 text-slate-400">{pr.tools}</p>}
             </div>
@@ -1963,7 +1976,7 @@ function ResumeProfessional({ data, pageSettings }) {
                 </div>
                 <p className="text-[10.5px] text-slate-600 italic">{e.company}{e.location && `, ${e.location}`}</p>
                 {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
-                  <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? e.summary : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
+                  <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
                 )}
               </div>
             ))}
@@ -1976,7 +1989,7 @@ function ResumeProfessional({ data, pageSettings }) {
               <div key={pr.id} className="mb-2.5 last:mb-0 break-inside-avoid">
                 <p className="text-[11.5px] font-semibold text-slate-900">{pr.name}</p>
                 {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
-                  <div className="text-[10.5px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? pr.description : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
+                  <div className="text-[10.5px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
                 )}
                 {pr.tools && <p className="text-[10px] italic mt-0.5 text-slate-500">Tools: {pr.tools}</p>}
               </div>
