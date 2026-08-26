@@ -69,7 +69,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderExperience() {
         return data.experience.map((e) => (
-            <div key={e.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={e.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{e.jobTitle}</span>
                     <span className={config.styles.date}>{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
@@ -87,7 +87,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderEducation() {
         return data.education.map((ed) => (
-            <div key={ed.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={ed.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</span>
                     <span className={config.styles.date}>{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
@@ -104,7 +104,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderProjects() {
         return data.projects.map((pr) => (
-            <div key={pr.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={pr.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{pr.name}</span>
                 </div>
@@ -127,7 +127,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderCertifications() {
         return data.certifications.map((c) => (
-            <div key={c.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={c.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{c.name}</span>
                     <span className={config.styles.date}>{c.issueDate}</span>
@@ -144,7 +144,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderAchievements() {
         return data.achievements.map((a) => (
-            <div key={a.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={a.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{a.title}</span>
                     <span className={config.styles.date}>{a.date}</span>
@@ -184,7 +184,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderInternships() {
         return data.internships.map((e) => (
-            <div key={e.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={e.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{e.jobTitle}</span>
                     <span className={config.styles.date}>{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
@@ -200,7 +200,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderCourses() {
         return data.courses.map((c) => (
-            <div key={c.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={c.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{c.name}</span>
                 </div>
@@ -213,7 +213,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderVolunteering() {
         return data.volunteering.map((v) => (
-            <div key={v.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={v.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{v.role}</span>
                     <span className={config.styles.date}>{v.startDate}{(v.startDate || v.endDate) && " \u2013 "}{v.endDate}</span>
@@ -228,7 +228,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderPublications() {
         return data.publications.map((p) => (
-            <div key={p.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={p.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{p.title}</span>
                     <span className={config.styles.date}>{p.date}</span>
@@ -251,7 +251,7 @@ export function UniversalTemplate({ data, pageSettings, config }) {
 
     function renderCustomSection() {
         return data.customSection.items.map((i) => (
-            <div key={i.id} className={`mb-${config.spacing.itemBottom} last:mb-0 `}>
+            <div key={i.id} className={`mb-${config.spacing.itemBottom} last:mb-0 page-breaker `}>
                 <div className={config.styles.itemHeader}>
                     <span className={config.styles.jobTitle}>{i.title}</span>
                     <span className={config.styles.date}>{i.subtitle}</span>

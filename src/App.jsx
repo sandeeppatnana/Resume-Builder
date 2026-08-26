@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil,
+  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil, Search, ChevronLeft,
 } from "lucide-react";
 import { validatePhoneNumberLength, isValidPhoneNumber, AsYouType } from 'libphonenumber-js';
+import { ATSCheckerModal } from './ATSChecker';
 import RichTextEditor from "./RichTextEditor";
 import CountryCodePicker from "./CountryCodePicker";
 import { COUNTRIES } from "./countries";
@@ -70,7 +71,7 @@ function uid(prefix = "id") {
   return `${prefix}-${Date.now().toString(36)}-${uidCounter}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-const STORAGE_KEY = "resume-builder:data:v1";
+const STORAGE_KEY = "resume_builder_data:v1";
 const DEFAULT_SECTION_ORDER = ["summary", "experience", "skills", "projects", "education", "certifications", "Languages", "achievements", "links", "internships", "courses", "volunteering", "publications", "interests", "customSection"];
 const DEFAULT_PAGE_SETTINGS = { size: "a4", orientation: "portrait", customWidth: 210, customHeight: 297, customUnit: "mm" };
 const PAGE_UNITS = { mm: 1, cm: 10, in: 25.4 };
@@ -2457,6 +2458,8 @@ export default function App() {
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [showTemplates, setShowTemplates] = useState(false);
   const [mobileTab, setMobileTab] = useState("edit");
+  const [showModalPreview, setShowModalPreview] = useState(false);
+  const [showATSChecker, setShowATSChecker] = useState(false);
   const [openSections, setOpenSections] = useState({ personal: true });
   const saveTimer = useRef(null);
 
@@ -2545,41 +2548,43 @@ export default function App() {
         items={orderedSections}
         onReorder={(next) => update({ sectionOrder: next.map((section) => section.key) })}
         renderItem={(s, index, drag) => (
-          <CollapsibleSection
-            key={s.key}
-            title={s.label}
-            open={!!openSections[s.key]}
-            onToggle={() => toggleSection(s.key)}
-            dragHandle={drag.handle}
-            dragging={drag.dragging}
-          >
-            {s.customField ? (
-              <CustomFieldCard
-                field={s.customField}
-                onChange={(patch) => updateCustomField(s.customField.id, patch)}
-                onDelete={() => deleteCustomField(s.customField.id)}
-                drag={undefined}
-              />
-            ) : (
-              <>
-                {s.key === "summary" && <SummaryEditor data={data} update={update} />}
-                {s.key === "experience" && <ExperienceEditor data={data} update={update} />}
-                {s.key === "skills" && <SkillsEditor data={data} update={update} />}
-                {s.key === "projects" && <ProjectsEditor data={data} update={update} />}
-                {s.key === "education" && <EducationEditor data={data} update={update} />}
-                {s.key === "certifications" && <CertificationsEditor data={data} update={update} />}
-                {s.key === "Languages" && <LanguagesEditor data={data} update={update} />}
-                {s.key === "achievements" && <AchievementsEditor data={data} update={update} />}
-                {s.key === "links" && <LinksEditor data={data} update={update} />}
-                {s.key === "internships" && <InternshipsEditor data={data} update={update} />}
-                {s.key === "courses" && <CoursesEditor data={data} update={update} />}
-                {s.key === "volunteering" && <VolunteeringEditor data={data} update={update} />}
-                {s.key === "publications" && <PublicationsEditor data={data} update={update} />}
-                {s.key === "interests" && <InterestsEditor data={data} update={update} />}
-                {s.key === "customSection" && <CustomSectionEditor data={data} update={update} />}
-              </>
-            )}
-          </CollapsibleSection>
+          <div id={`section-${s.key}`}>
+            <CollapsibleSection
+              key={s.key}
+              title={s.label}
+              open={!!openSections[s.key]}
+              onToggle={() => toggleSection(s.key)}
+              dragHandle={drag.handle}
+              dragging={drag.dragging}
+            >
+              {s.customField ? (
+                <CustomFieldCard
+                  field={s.customField}
+                  onChange={(patch) => updateCustomField(s.customField.id, patch)}
+                  onDelete={() => deleteCustomField(s.customField.id)}
+                  drag={undefined}
+                />
+              ) : (
+                <>
+                  {s.key === "summary" && <SummaryEditor data={data} update={update} />}
+                  {s.key === "experience" && <ExperienceEditor data={data} update={update} />}
+                  {s.key === "skills" && <SkillsEditor data={data} update={update} />}
+                  {s.key === "projects" && <ProjectsEditor data={data} update={update} />}
+                  {s.key === "education" && <EducationEditor data={data} update={update} />}
+                  {s.key === "certifications" && <CertificationsEditor data={data} update={update} />}
+                  {s.key === "Languages" && <LanguagesEditor data={data} update={update} />}
+                  {s.key === "achievements" && <AchievementsEditor data={data} update={update} />}
+                  {s.key === "links" && <LinksEditor data={data} update={update} />}
+                  {s.key === "internships" && <InternshipsEditor data={data} update={update} />}
+                  {s.key === "courses" && <CoursesEditor data={data} update={update} />}
+                  {s.key === "volunteering" && <VolunteeringEditor data={data} update={update} />}
+                  {s.key === "publications" && <PublicationsEditor data={data} update={update} />}
+                  {s.key === "interests" && <InterestsEditor data={data} update={update} />}
+                  {s.key === "customSection" && <CustomSectionEditor data={data} update={update} />}
+                </>
+              )}
+            </CollapsibleSection>
+          </div>
         )}
       />
       <button
@@ -2658,6 +2663,18 @@ export default function App() {
             {saveStatus}
           </span>
           <button
+            onClick={() => setShowATSChecker(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-md px-3 py-1.5 hover:bg-slate-50"
+          >
+            <Search size={13} /> ATS Scanner
+          </button>
+          <button
+            onClick={() => setShowModalPreview(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-md px-3 py-1.5 hover:bg-slate-50"
+          >
+            <Eye size={13} /> Preview
+          </button>
+          <button
             onClick={() => setShowTemplates(true)}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-md px-3 py-1.5 hover:bg-slate-50"
           >
@@ -2699,11 +2716,174 @@ export default function App() {
           current={template}
           onSelect={(id) => {
             setTemplate(id);
+            if (typeof updateTemplateConfig === 'function') updateTemplateConfig(id);
             setShowTemplates(false);
           }}
           onClose={() => setShowTemplates(false)}
         />
       )}
+
+      {showModalPreview && (
+        <PreviewModal
+          data={data}
+          template={template}
+          onClose={() => setShowModalPreview(false)}
+        />
+      )}
+
+      {showATSChecker && (
+        <ATSCheckerModal
+          data={data}
+          update={update}
+          onClose={() => setShowATSChecker(false)}
+          onGoToField={(fieldId) => {
+            setShowATSChecker(false);
+            setMobileTab("edit");
+            if (fieldId && !openSections[fieldId]) {
+              setOpenSections(prev => ({ ...prev, [fieldId]: true }));
+            }
+            setTimeout(() => {
+              const el = document.getElementById(`section-${fieldId}`);
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+          }}
+        />
+      )}
     </div>
   );
 }
+
+function PreviewModal({ data, template, onClose }) {
+  const ActiveTemplate = TEMPLATE_COMPONENTS[template] || ResumeATS;
+
+  const [scale, setScale] = useState(1);
+  const containerRef = useRef(null);
+  const resumeRef = useRef(null);
+  const [resumeHeight, setResumeHeight] = useState(1122); // ~297mm in px
+  const [pagesComputed, setPagesComputed] = useState(false);
+
+  useEffect(() => {
+    function updateLayout() {
+      if (containerRef.current) {
+        const cw = containerRef.current.clientWidth;
+        const targetW = 794 + 64;
+        setScale(Math.min(1, Math.max(0.2, cw / targetW)));
+      }
+    }
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    let ob = null;
+    if (window.ResizeObserver && containerRef.current) {
+      ob = new ResizeObserver(() => updateLayout());
+      ob.observe(containerRef.current);
+    }
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      if (ob) ob.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    function calculatePagination() {
+      if (!resumeRef.current) return;
+      setPagesComputed(false);
+
+      const PAGE_HEIGHT = 1122.5; // EXACT 297mm in pixels at 96dpi
+
+      const elements = Array.from(resumeRef.current.querySelectorAll('.page-breaker, p, h1, h2, h3, h4, li, .resume-richtext'));
+
+      // Reset margins first
+      elements.forEach(el => {
+        el.style.marginTop = '';
+        el.classList.remove('pushed-by-polyfill');
+      });
+
+      let hadToPush = false;
+      const parentRect = resumeRef.current.getBoundingClientRect();
+      const parentTop = parentRect.top;
+
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        // Only process elements directly contributing to linear flow height to avoid cascading infinite loops
+        if (el.offsetHeight === 0) continue;
+
+        const rect = el.getBoundingClientRect();
+        const top = (rect.top - parentTop) / scale;
+        const bottom = top + (rect.height / scale);
+
+        const topPage = Math.floor((top + 5) / PAGE_HEIGHT);
+        const bottomPage = Math.floor((bottom - 5) / PAGE_HEIGHT);
+
+        if (topPage !== bottomPage && bottom - top < PAGE_HEIGHT * 0.8) {
+          // Element crosses page boundary! Push it down to perfectly align AFTER the boundary
+          const overflowAmount = (bottomPage * PAGE_HEIGHT) - top;
+
+          // Apply push 
+          const existingMargin = parseFloat(window.getComputedStyle(el).marginTop) || 0;
+          el.style.marginTop = `${existingMargin + overflowAmount}px`;
+          el.classList.add('pushed-by-polyfill');
+          hadToPush = true;
+        }
+      }
+
+      setResumeHeight(resumeRef.current.offsetHeight);
+      setPagesComputed(true);
+    }
+
+    const timeout = setTimeout(calculatePagination, 400); // Wait for fonts and imagery to settle
+    return () => clearTimeout(timeout);
+  }, [data, template]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-8">
+      {/* Centered Modal Window */}
+      <div className="w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col h-full max-h-[90vh] overflow-hidden border border-slate-300">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0 z-10">
+          <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+            <Eye size={18} className="text-teal-600" /> Resume Preview
+            {!pagesComputed && <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] uppercase font-bold tracking-widest animate-pulse">Computing Bounds...</span>}
+          </h2>
+          <button onClick={onClose} className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors focus:outline-none">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* iframe-style Layout Container */}
+        <div ref={containerRef} className="flex-1 overflow-y-auto bg-[#525659] p-6 sm:p-12 flex flex-col items-center">
+          <div style={{ width: 794 * scale, height: resumeHeight * scale, opacity: pagesComputed ? 1 : 0.8 }} className="relative shrink-0 transition-opacity duration-300 ease-in-out">
+
+            <div
+              ref={resumeRef}
+              className="absolute top-0 left-0 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] origin-top-left overflow-hidden rounded-sm"
+              style={{ width: '210mm', minHeight: '297mm', transform: `scale(${scale})` }}
+            >
+              <ActiveTemplate data={data} pageSettings={data.pageSettings} />
+
+              {/* Pagination Overlays - Restored because Polyfill now natively prevents intersection! */}
+              <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>
+                {Array.from({ length: Math.max(1, Math.floor(resumeHeight / 1122.5)) }).map((_, i) => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    top: `calc(${i + 1} * 297mm - 1px)`,
+                    left: 0, right: 0,
+                    borderTop: '2px dashed #94a3b8',
+                    display: 'flex', justifyContent: 'center'
+                  }}>
+                    <span className="bg-slate-200/95 backdrop-blur text-slate-700 text-[11px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-b-lg shadow-sm border border-t-0 border-slate-300 relative -top-[2px]">
+                      Page {i + 2}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
