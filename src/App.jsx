@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil, Search, ChevronLeft,
+  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil, Search, ChevronLeft, Upload, PenTool
 } from "lucide-react";
 import { validatePhoneNumberLength, isValidPhoneNumber, AsYouType } from 'libphonenumber-js';
 import { ATSCheckerModal } from './ATSChecker';
@@ -2451,8 +2451,136 @@ const SECTIONS = [
   { key: "customSection", label: "Custom Section" },
 ];
 
+function emptyData() {
+  return {
+    personal: { fullName: "", title: "", email: "", phone: { countryCode: "+91", number: "" }, location: "", country: "", linkedin: "", github: "", portfolio: "" },
+    summary: "", experience: [], skillGroups: [], projects: [], education: [], Languages: [], certifications: [], achievements: [], links: [], internships: [], courses: [], volunteering: [], publications: [], interests: [], customSection: { sectionTitle: "Custom Section", items: [] }, customFields: [],
+    sectionOrder: [...DEFAULT_SECTION_ORDER],
+    pageSettings: { ...DEFAULT_PAGE_SETTINGS },
+  };
+}
+
+function LandingScreen({ onImport, onCreateManually, hasExistingData, onContinue }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+      {/* Background decorators */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-100 rounded-full blur-[100px] opacity-60"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[100px] opacity-60"></div>
+
+      <div className="max-w-4xl w-full relative z-10 flex flex-col items-center cursor-default">
+
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center shadow-lg">
+            <FileText size={20} className="text-white" />
+          </div>
+          <span className="text-xl font-black tracking-tight text-slate-800">Resume Builder</span>
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4 text-center tracking-tight">Create Your Resume</h1>
+        <p className="text-center text-slate-600 text-lg mb-10 max-w-lg">Choose how you'd like to get started building your professional profile.</p>
+
+        {hasExistingData && (
+          <div className="w-full max-w-2xl mb-8 p-4 sm:p-5 bg-white border-2 border-teal-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-teal-500/5 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
+                <FileText size={18} className="text-teal-700" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800">Draft in Progress!</h3>
+                <p className="text-sm text-slate-500">We found an unsaved resume in your browser memory.</p>
+              </div>
+            </div>
+            <button onClick={onContinue} className="w-full sm:w-auto px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-sm transition-all focus:ring-4 focus:ring-teal-500/20 whitespace-nowrap">
+              Continue Editing
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+          <button onClick={onImport} className="text-left bg-white p-8 rounded-2xl border-2 border-slate-200 hover:border-slate-800 hover:shadow-xl transition-all group flex flex-col items-start focus:outline-none focus:ring-4 focus:ring-slate-900/10">
+            <div className="w-14 h-14 bg-slate-100 text-slate-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-slate-800 group-hover:text-white transition-all shadow-sm">
+              <Upload size={26} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Import Existing Resume</h2>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">Upload a PDF or DOCX file. We will automatically parse and map your data into the editor.</p>
+            <div className="mt-auto pt-4 flex items-center gap-2 text-sm font-bold text-slate-800 group-hover:translate-x-1 transition-transform">
+              Upload file <ArrowRight size={16} />
+            </div>
+          </button>
+          <button onClick={onCreateManually} className="text-left bg-white p-8 rounded-2xl border-2 border-slate-200 hover:border-slate-800 hover:shadow-xl transition-all group flex flex-col items-start focus:outline-none focus:ring-4 focus:ring-slate-900/10">
+            <div className="w-14 h-14 bg-slate-100 text-slate-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-slate-800 group-hover:text-white transition-all shadow-sm">
+              <PenTool size={26} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Create Manually</h2>
+            <p className="text-slate-500 text-sm leading-relaxed mb-4">Start from scratch with a blank canvas and enter your information step by step.</p>
+            <div className="mt-auto pt-4 flex items-center gap-2 text-sm font-bold text-slate-800 group-hover:translate-x-1 transition-transform">
+              Start writing <ArrowRight size={16} />
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ImportScreen({ onBack, onComplete }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      <div className="max-w-xl w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 text-center">
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Upload size={32} />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Upload Resume</h2>
+        <p className="text-slate-500 mb-8">Select a PDF or DOCX file to automatically parse your data.</p>
+
+        <div className="border-2 border-dashed border-slate-300 rounded-xl p-12 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer flex flex-col items-center justify-center mb-6">
+          <FileText size={32} className="text-slate-400 mb-4" />
+          <p className="text-sm font-bold text-slate-600">Click to browse or drag and drop</p>
+          <p className="text-xs text-slate-400 mt-1">PDF, DOCX formats supported</p>
+        </div>
+
+        <button onClick={onBack} className="text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1.5 mx-auto">
+          <ChevronLeft size={16} /> Back to Home
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [appScreen, setAppScreenState] = useState(() => window.localStorage.getItem('appScreen_v1') || 'landing');
+  const setAppScreen = (screen) => { setAppScreenState(screen); window.localStorage.setItem('appScreen_v1', screen); };
+
+  const hasExistingData = useMemo(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      if (!parsed.data) return false;
+      const d = parsed.data;
+      if (d.personal?.fullName || d.personal?.email || d.experience?.length > 0 || d.education?.length > 0 || d.summary) {
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [appScreen]);
+
   const [data, setData] = useState(defaultData());
+
+  const handleCreateManually = () => {
+    if (hasExistingData) {
+      if (window.confirm("This will erase your current resume progress. Are you sure you want to start from scratch?")) {
+        const empty = emptyData();
+        setData(empty);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: empty, template: "ats" }));
+        setAppScreen('editor');
+      }
+    } else {
+      setAppScreen('editor');
+    }
+  };
   const [template, setTemplate] = useState("ats");
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Saved");
@@ -2600,6 +2728,19 @@ export default function App() {
 
   const previewPane = <PreviewPanel data={data} template={template} onPageSettingsChange={updatePageSettings} />;
 
+  if (appScreen === 'landing') {
+    return <LandingScreen
+      hasExistingData={hasExistingData}
+      onContinue={() => setAppScreen('editor')}
+      onCreateManually={handleCreateManually}
+      onImport={() => setAppScreen('import')}
+    />;
+  }
+
+  if (appScreen === 'import') {
+    return <ImportScreen onBack={() => setAppScreen('landing')} onComplete={(parsedData) => { setData(parsedData); setAppScreen('editor'); }} />;
+  }
+
   return (
     <div className="resume-app-shell h-screen flex flex-col bg-slate-50" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
       <style>{`
@@ -2650,12 +2791,15 @@ export default function App() {
  }
  `}</style>
 
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0 z-20 relative">
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md bg-teal-600 flex items-center justify-center">
-            <FileText size={15} className="text-white" />
-          </div>
-          <span className="text-sm font-semibold text-slate-800">Resume Builder</span>
+          <button onClick={() => setAppScreen('landing')} className="flex items-center gap-1.5 hover:bg-slate-100 p-1.5 -ml-1.5 rounded-lg transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-500/30">
+            <ChevronLeft size={16} className="text-slate-500 group-hover:text-slate-800" />
+            <div className="h-7 w-7 rounded-md bg-teal-600 flex items-center justify-center shadow-sm">
+              <FileText size={15} className="text-white" />
+            </div>
+            <span className="text-sm font-semibold text-slate-800 hidden sm:block group-hover:text-teal-700 transition-colors">Back to Home</span>
+          </button>
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden sm:flex items-center gap-1 text-xs text-slate-400 mr-1">
