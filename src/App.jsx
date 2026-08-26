@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil, Search, ChevronLeft, Upload, PenTool
+  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil, Search, ChevronLeft, Upload, PenTool, AlertCircle
 } from "lucide-react";
 import { validatePhoneNumberLength, isValidPhoneNumber, AsYouType } from 'libphonenumber-js';
 import { ATSCheckerModal } from './ATSChecker';
 import RichTextEditor from "./RichTextEditor";
 import CountryCodePicker from "./CountryCodePicker";
 import { COUNTRIES } from "./countries";
+import { parseResumeFile } from "./resumeParser";
 import {
   ResumeATSPro,
   ResumeModernPro,
@@ -117,7 +118,7 @@ async function writeResumeStorage(value) {
   window.localStorage.setItem(STORAGE_KEY, value);
 }
 
-function defaultData() {
+export function defaultData() {
   return {
     personal: {
       fullName: "",
@@ -2451,7 +2452,7 @@ const SECTIONS = [
   { key: "customSection", label: "Custom Section" },
 ];
 
-function emptyData() {
+export function emptyData() {
   return {
     personal: { fullName: "", title: "", email: "", phone: { countryCode: "+91", number: "" }, location: "", country: "", linkedin: "", github: "", portfolio: "" },
     summary: "", experience: [], skillGroups: [], projects: [], education: [], Languages: [], certifications: [], achievements: [], links: [], internships: [], courses: [], volunteering: [], publications: [], interests: [], customSection: { sectionTitle: "Custom Section", items: [] }, customFields: [],
@@ -2523,25 +2524,250 @@ function LandingScreen({ onImport, onCreateManually, hasExistingData, onContinue
   );
 }
 
-function ImportScreen({ onBack, onComplete }) {
+function ImportScreen({ onBack, onComplete, initialFile }) {
+  const [file, setFile] = useState(initialFile || null);
+  const [error, setError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFile = (selectedFile) => {
+    setError("");
+    if (!selectedFile) return;
+
+    const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+    const validExtensions = ['.pdf', '.docx', '.doc'];
+    const extension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
+
+    if (!validTypes.includes(selectedFile.type) && !validExtensions.includes(extension)) {
+      setError("Invalid format. Please upload a PDF or DOCX file.");
+      return;
+    }
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError("File is too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setFile(selectedFile);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const clearFile = () => {
+    setFile(null);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      <div className="max-w-xl w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 text-center">
-        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 transition-all">
+      <div className="max-w-xl w-full bg-white p-8 sm:p-12 rounded-2xl shadow-xl border border-slate-200 text-center relative">
+
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
           <Upload size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Upload Resume</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Upload Resume</h2>
         <p className="text-slate-500 mb-8">Select a PDF or DOCX file to automatically parse your data.</p>
 
-        <div className="border-2 border-dashed border-slate-300 rounded-xl p-12 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer flex flex-col items-center justify-center mb-6">
-          <FileText size={32} className="text-slate-400 mb-4" />
-          <p className="text-sm font-bold text-slate-600">Click to browse or drag and drop</p>
-          <p className="text-xs text-slate-400 mt-1">PDF, DOCX formats supported</p>
-        </div>
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm font-semibold rounded-xl border border-red-200 shadow-sm flex items-center justify-center gap-2">
+            <X size={16} /> {error}
+          </div>
+        )}
 
-        <button onClick={onBack} className="text-sm font-bold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1.5 mx-auto">
+        {!file ? (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-2xl p-12 transition-all cursor-pointer flex flex-col items-center justify-center mb-8 
+              ${isDragging ? 'border-teal-500 bg-teal-50 scale-[1.02]' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => handleFile(e.target.files[0])}
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+            />
+            <FileText size={40} className={`${isDragging ? 'text-teal-500' : 'text-slate-400'} mb-4 transition-colors`} />
+            <p className="text-base font-extrabold text-slate-700 mb-1">Click to browse or drag and drop</p>
+            <p className="text-sm text-slate-400 font-medium">PDF, DOCX formats (Max 5MB)</p>
+          </div>
+        ) : (
+          <div className="border-2 border-teal-500 rounded-2xl p-6 bg-teal-50/30 flex flex-col items-center justify-center mb-8 shadow-sm transition-all animate-in fade-in zoom-in duration-200">
+            <div className="w-14 h-14 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mb-4">
+              <Check size={28} />
+            </div>
+            <p className="text-lg font-bold text-slate-900 break-all leading-tight max-w-[90%]">{file.name}</p>
+            <p className="text-sm font-medium text-slate-500 mt-1 mb-6">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+              <button onClick={clearFile} className="w-full py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all focus:ring-4 focus:ring-slate-100">
+                Replace File
+              </button>
+              <button onClick={() => onComplete(file)} className="w-full py-3 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-all shadow-sm focus:ring-4 focus:ring-teal-500/30 flex items-center justify-center gap-2">
+                Continue <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button onClick={onBack} className="text-sm font-bold text-slate-500 hover:text-slate-900 flex items-center justify-center gap-1.5 mx-auto transition-colors focus:outline-none">
           <ChevronLeft size={16} /> Back to Home
         </button>
+      </div>
+    </div>
+  );
+}
+
+function ParseScreen({ file, onCancel, onComplete }) {
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (!file) {
+      setError("File was lost from memory cache. Please import it again.");
+      return;
+    }
+
+    parseResumeFile(file).then(mappedData => {
+      if (active) onComplete(mappedData);
+    }).catch(err => {
+      console.error(err);
+      if (active) setError(err.message || "Engine failed to extract pure text blocks. Ensure your file is not a corrupted image scan.");
+    });
+
+    return () => { active = false; };
+  }, [file, onComplete]);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-slate-200 text-center animate-in fade-in zoom-in duration-300">
+        {error ? (
+          <>
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-200">
+              <AlertCircle size={32} />
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">Extraction Failed</h2>
+            <p className="text-sm font-medium text-red-600 mb-8 px-4 py-3 bg-red-50 rounded-lg">{error}</p>
+            <button onClick={onCancel} className="text-sm font-bold w-full py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl transition-colors">
+              Go Back
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse shadow-sm">
+              <Settings size={32} className="animate-spin duration-3000" />
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-900 mb-3">Parsing Resume...</h2>
+            <p className="text-sm font-medium text-slate-600 mb-8 px-4">Extracting text from <span className="font-bold text-slate-800 break-all">{file?.name}</span>. The machine learning mapping pipeline is isolating objects.</p>
+            <button onClick={onCancel} className="text-sm font-bold px-6 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-xl transition-colors">
+              Cancel Extraction
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReviewImportScreen({ data: payload, onApply, onCancel }) {
+  const data = payload?.parsedData || payload;
+  const confidence = payload?.confidence || {};
+
+  const lowCount = [
+    confidence?.personal?.fullName,
+    confidence?.personal?.email,
+    confidence?.personal?.phone,
+    ...((confidence?.experience || []).flatMap(x => Object.values(x))),
+    ...((confidence?.education || []).flatMap(x => Object.values(x)))
+  ].filter(x => x === 'low' || x === 'unmapped').length;
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center py-12 transition-all overflow-y-auto">
+      <div className="max-w-3xl w-full">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-teal-200">
+            <Check size={32} />
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Success! Review Extract</h1>
+          <p className="text-slate-500 mt-3 max-w-lg mx-auto font-medium">We broke down your document completely offline. Please review the high-level metrics before importing onto your active work canvas.</p>
+          {lowCount > 0 && <span className="inline-block mt-4 px-4 py-1.5 bg-amber-100 text-amber-700 font-bold text-sm rounded-full border border-amber-200 shadow-sm animate-pulse">{lowCount} field(s) flagged for low offline confidence</span>}
+        </div>
+
+        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-8 animate-in slide-in-from-bottom-4 duration-500">
+          <h3 className="font-bold text-lg text-slate-800 mb-4 pb-2 border-b">Heuristic Mapping Results</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={`p-4 rounded-xl border ${confidence?.personal?.fullName !== 'high' ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors relative overflow-hidden`}>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                Candidate
+                {confidence?.personal?.fullName !== 'high' && <AlertCircle size={14} className="text-amber-500" />}
+              </span>
+              <span className="text-lg font-bold text-slate-800 truncate">{data?.personal?.fullName || "Not Found"}</span>
+            </div>
+            <div className={`p-4 rounded-xl border ${confidence?.personal?.email !== 'high' && confidence?.personal?.phone !== 'high' ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors relative overflow-hidden`}>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                Contact Object
+                {(confidence?.personal?.email !== 'high' && confidence?.personal?.phone !== 'high') && <AlertCircle size={14} className="text-amber-500" />}
+              </span>
+              <span className="text-lg font-bold text-slate-800 truncate">{data?.personal?.email || data?.personal?.phone || "Not Found"}</span>
+            </div>
+            <div className={`p-4 rounded-xl border ${(confidence?.experience || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped')) ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors`}>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                Experience Nodes
+                {((confidence?.experience || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped'))) && <AlertCircle size={14} className="text-amber-500" />}
+              </span>
+              <span className="text-lg font-bold text-slate-800 truncate">{data?.experience?.length || 0} Identifiers</span>
+            </div>
+            <div className={`p-4 rounded-xl border ${(confidence?.education || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped')) ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors`}>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                Education Maps
+                {((confidence?.education || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped'))) && <AlertCircle size={14} className="text-amber-500" />}
+              </span>
+              <span className="text-lg font-bold text-slate-800 truncate">{data?.education?.length || 0} Degrees</span>
+            </div>
+          </div>
+
+          {data?.customFields?.length > 0 && (
+            <div className="mt-6 p-4 rounded-xl border border-teal-300 bg-teal-50">
+              <h4 className="font-bold text-teal-900 text-sm mb-2 flex items-center gap-2">
+                <Check size={16} /> Unmapped Content Recovered safely!
+              </h4>
+              <p className="text-sm font-medium text-teal-800 leading-relaxed">
+                The specific engine boundary failed to map <strong>{data.customFields[0].description.split('\n').filter(Boolean).length} lines</strong> cleanly into Experience or Education structures. To preserve zero-loss data constraints, they have all been proactively dumped into a "Custom Section" at the bottom of your workspace.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+          <button onClick={onCancel} className="w-full py-4 text-slate-500 hover:text-slate-800 bg-white border border-slate-200 shadow-sm font-bold rounded-xl hover:bg-slate-50 transition-all focus:ring-4 focus:ring-slate-200">
+            Discard Extraction
+          </button>
+          <button
+            onClick={() => onApply(data)}
+            className="w-full py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 shadow flex items-center justify-center gap-2 transition-transform transform hover:-translate-y-0.5 focus:ring-4 focus:ring-teal-500/40"
+          >
+            Apply to Editor Workspace <ArrowRight size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -2550,6 +2776,9 @@ function ImportScreen({ onBack, onComplete }) {
 export default function App() {
   const [appScreen, setAppScreenState] = useState(() => window.localStorage.getItem('appScreen_v1') || 'landing');
   const setAppScreen = (screen) => { setAppScreenState(screen); window.localStorage.setItem('appScreen_v1', screen); };
+
+  const [importFile, setImportFile] = useState(null);
+  const [importExtractedData, setImportExtractedData] = useState(null);
 
   const [resumeName, setResumeName] = useState("");
 
@@ -2571,18 +2800,23 @@ export default function App() {
 
   const [data, setData] = useState(defaultData());
 
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   const handleCreateManually = () => {
     if (hasExistingData) {
-      if (window.confirm("This will erase your current resume progress. Are you sure you want to start from scratch?")) {
-        const empty = emptyData();
-        setData(empty);
-        setResumeName("");
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: empty, template: "ats", metadata: { name: "" } }));
-        setAppScreen('editor');
-      }
+      setShowResetConfirm(true);
     } else {
       setAppScreen('editor');
     }
+  };
+
+  const confirmResetData = () => {
+    const empty = emptyData();
+    setData(empty);
+    setResumeName("");
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: empty, template: "ats", metadata: { name: "" } }));
+    setShowResetConfirm(false);
+    setAppScreen('editor');
   };
   const [template, setTemplate] = useState("ats");
   const [loaded, setLoaded] = useState(false);
@@ -2733,16 +2967,59 @@ export default function App() {
   const previewPane = <PreviewPanel data={data} template={template} onPageSettingsChange={updatePageSettings} />;
 
   if (appScreen === 'landing') {
-    return <LandingScreen
-      hasExistingData={hasExistingData}
-      onContinue={() => setAppScreen('editor')}
-      onCreateManually={handleCreateManually}
-      onImport={() => setAppScreen('import')}
-    />;
+    return (
+      <>
+        {showResetConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Start from scratch?</h2>
+              <p className="text-sm font-medium text-slate-600 leading-relaxed mb-6">Your current resume and all saved drafts will be cleared. This action cannot be undone.</p>
+              <div className="flex gap-3 w-full">
+                <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">Cancel</button>
+                <button onClick={confirmResetData} className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition-colors">Start from Scratch</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <LandingScreen
+          hasExistingData={hasExistingData}
+          onContinue={() => setAppScreen('editor')}
+          onCreateManually={handleCreateManually}
+          onImport={() => setAppScreen('import')}
+        />
+      </>
+    );
   }
 
   if (appScreen === 'import') {
-    return <ImportScreen onBack={() => setAppScreen('landing')} onComplete={(parsedData) => { setData(parsedData); setAppScreen('editor'); }} />;
+    return <ImportScreen
+      initialFile={importFile}
+      onBack={() => setAppScreen('landing')}
+      onComplete={(file) => { setImportFile(file); setAppScreen('parse-queue'); }}
+    />;
+  }
+
+  if (appScreen === 'parse-queue') {
+    return <ParseScreen
+      file={importFile}
+      onCancel={() => setAppScreen('import')}
+      onComplete={(mapped) => { setImportExtractedData(mapped); setAppScreen('review-import'); }}
+    />;
+  }
+
+  if (appScreen === 'review-import') {
+    return <ReviewImportScreen
+      data={importExtractedData}
+      onCancel={() => setAppScreen('import')}
+      onApply={(finalData) => {
+        setData(finalData);
+        setResumeName(importFile?.name ? importFile.name.split('.')[0] : "Imported Resume");
+        setAppScreen('editor');
+      }}
+    />;
   }
 
   return (
@@ -2811,7 +3088,7 @@ export default function App() {
               onChange={(e) => setResumeName(e.target.value)}
               placeholder="Untitled Resume"
               className="text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent border-none outline-none focus:ring-0 w-32 sm:w-64 px-1 py-1 group-hover:bg-slate-100 focus:bg-slate-100 rounded transition-colors truncate"
-              title="Resume Name (Internal metadata for downloaded file)"
+              title="Resume Name (This will be the name of your downloaded resume.)"
             />
             <Pencil size={12} className="text-slate-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </div>
