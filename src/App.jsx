@@ -169,7 +169,7 @@ const TEMPLATES = [
 ];
 
 function fileSafe(str) {
-  return (str || "").trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "_");
+  return (str || "").trim().replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -2551,6 +2551,8 @@ export default function App() {
   const [appScreen, setAppScreenState] = useState(() => window.localStorage.getItem('appScreen_v1') || 'landing');
   const setAppScreen = (screen) => { setAppScreenState(screen); window.localStorage.setItem('appScreen_v1', screen); };
 
+  const [resumeName, setResumeName] = useState("");
+
   const hasExistingData = useMemo(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -2574,7 +2576,8 @@ export default function App() {
       if (window.confirm("This will erase your current resume progress. Are you sure you want to start from scratch?")) {
         const empty = emptyData();
         setData(empty);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: empty, template: "ats" }));
+        setResumeName("");
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: empty, template: "ats", metadata: { name: "" } }));
         setAppScreen('editor');
       }
     } else {
@@ -2603,6 +2606,7 @@ export default function App() {
             setData({ ...parsed.data, customFields, sectionOrder: normalizeSectionOrder(parsed.data.sectionOrder, customFields), pageSettings: normalizePageSettings(parsed.data.pageSettings) });
           }
           if (parsed.template) setTemplate(parsed.template);
+          if (parsed.metadata?.name !== undefined) setResumeName(parsed.metadata.name);
         }
       } catch (e) {
         /* no saved data yet */
@@ -2621,14 +2625,14 @@ export default function App() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       try {
-        await writeResumeStorage(JSON.stringify({ data, template }));
+        await writeResumeStorage(JSON.stringify({ data, template, metadata: { name: resumeName } }));
         setSaveStatus("Saved");
       } catch (e) {
         setSaveStatus("Save failed");
       }
     }, 600);
     return () => clearTimeout(saveTimer.current);
-  }, [data, template, loaded]);
+  }, [data, template, resumeName, loaded]);
 
   const update = (patch) => setData((d) => ({ ...d, ...patch }));
   const updatePageSettings = (patch) => update({ pageSettings: normalizePageSettings({ ...data.pageSettings, ...patch }) });
@@ -2637,7 +2641,7 @@ export default function App() {
 
   const handleDownload = () => {
     const prevTitle = document.title;
-    const fname = `${fileSafe(data.personal.fullName) || "Resume"}_${fileSafe(data.personal.title.split("|")[0]) || "Resume"}_Resume`;
+    const fname = resumeName && resumeName.trim() ? fileSafe(resumeName.trim()) : "Resume";
     document.title = fname;
     window.setTimeout(() => {
       window.print();
@@ -2792,16 +2796,27 @@ export default function App() {
  `}</style>
 
       <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0 z-20 relative">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setAppScreen('landing')} className="flex items-center gap-1.5 hover:bg-slate-100 p-1.5 -ml-1.5 rounded-lg transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-500/30">
+        <div className="flex items-center gap-2 min-w-0">
+          <button onClick={() => setAppScreen('landing')} className="flex items-center gap-1.5 hover:bg-slate-100 p-1.5 -ml-1.5 rounded-lg transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-500/30 shrink-0">
             <ChevronLeft size={16} className="text-slate-500 group-hover:text-slate-800" />
-            <div className="h-7 w-7 rounded-md bg-teal-600 flex items-center justify-center shadow-sm">
+            <div className="h-7 w-7 rounded-md bg-teal-600 flex items-center justify-center shadow-sm hidden sm:flex">
               <FileText size={15} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-slate-800 hidden sm:block group-hover:text-teal-700 transition-colors">Back to Home</span>
           </button>
+          <div className="h-4 w-px bg-slate-300 mx-1 hidden sm:block"></div>
+          <div className="flex items-center bg-transparent group min-w-0">
+            <input
+              type="text"
+              value={resumeName}
+              onChange={(e) => setResumeName(e.target.value)}
+              placeholder="Untitled Resume"
+              className="text-sm font-bold text-slate-800 placeholder-slate-400 bg-transparent border-none outline-none focus:ring-0 w-32 sm:w-64 px-1 py-1 group-hover:bg-slate-100 focus:bg-slate-100 rounded transition-colors truncate"
+              title="Resume Name (Internal metadata for downloaded file)"
+            />
+            <Pencil size={12} className="text-slate-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:flex items-center gap-1 text-xs text-slate-400 mr-1">
             {saveStatus === "Saved" && <Check size={12} className="text-teal-600" />}
             {saveStatus}
