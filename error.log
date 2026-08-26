@@ -1,0 +1,13 @@
+
+> build
+> react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+[eslint] 
+src\App.jsx
+Syntax error: Identifier 'Github' has already been declared. (39:6) (39:6)
+
+
+

@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  Save, LayoutTemplate, Eye, Download, Plus, Trash2, ChevronDown, ChevronUp,
-  ArrowUp, ArrowDown, ZoomIn, ZoomOut, Maximize2, X, Check, Pencil, FileText,
-  GripVertical, MapPin, Mail, Phone, Globe,
+  ChevronDown, ChevronUp, GripVertical, MapPin, Mail, Phone, Globe, LayoutGrid, Palette, Type, LayoutTemplate, Settings, FileText, ArrowRight, Eye, Plus, ArrowUp, ArrowDown, Trash2, X, Save, Download, ZoomIn, ZoomOut, Maximize2, Check, Pencil,
 } from "lucide-react";
+import { validatePhoneNumberLength, isValidPhoneNumber, AsYouType } from 'libphonenumber-js';
 import RichTextEditor from "./RichTextEditor";
 import CountryCodePicker from "./CountryCodePicker";
+import { COUNTRIES } from "./countries";
 
 export function normalizeToHtml(value) {
   if (Array.isArray(value)) {
@@ -494,8 +494,12 @@ function PersonalEditor({ data, update }) {
   // Backwards compatibility safety: 
   const currentPhoneObj = typeof p.phone === 'object' && p.phone !== null ? p.phone : {
     countryCode: typeof p.phone === 'string' ? (p.phone.split(' ')[0] || '+91') : '+91',
-    number: typeof p.phone === 'string' ? (p.phone.replace(/^\+\d+\s?/, '') || '') : ''
+    number: typeof p.phone === 'string' ? (p.phone.replace(/^\+\d+\s?/, '') || '') : '',
+    iso: 'IN'
   };
+  const phoneIso = currentPhoneObj.iso || 'IN';
+  const selectedCountryMeta = COUNTRIES.find(c => c.iso === phoneIso) || { maxLength: 15 };
+  const maxLen = selectedCountryMeta.maxLength || 15;
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -505,21 +509,36 @@ function PersonalEditor({ data, update }) {
 
       <div>
         <span className="block text-xs font-medium text-slate-500 mb-1">Phone Number</span>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-start">
           <CountryCodePicker
             value={currentPhoneObj.countryCode}
-            onChange={(code, name) => {
-              set("phone")({ ...currentPhoneObj, countryCode: code });
+            iso={phoneIso}
+            onChange={(code, name, iso) => {
+              set("phone")({ ...currentPhoneObj, countryCode: code, iso });
               if (name && !p.country) { set("country")(name); }
             }}
           />
-          <input
-            type="tel"
-            value={currentPhoneObj.number}
-            onChange={(e) => set("phone")({ ...currentPhoneObj, number: e.target.value })}
-            placeholder="9876543210"
-            className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 min-w-0"
-          />
+          <div className="flex-1 min-w-0 flex flex-col gap-1">
+            <input
+              type="tel"
+              maxLength={maxLen}
+              value={currentPhoneObj.number}
+              onChange={(e) => {
+                let raw = e.target.value.replace(/\D/g, '');
+                if (!raw) {
+                  set("phone")({ ...currentPhoneObj, number: "" });
+                  return;
+                }
+                raw = raw.slice(0, maxLen);
+                set("phone")({ ...currentPhoneObj, number: raw });
+              }}
+              placeholder="9876543210"
+              className={`w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-800 ${currentPhoneObj.number && !isValidPhoneNumber(currentPhoneObj.number, phoneIso) ? "border-red-400 focus:border-red-500 focus:ring-red-500" : "border-slate-200 focus:border-teal-500 focus:ring-teal-500"} focus:outline-none focus:ring-2`}
+            />
+            {currentPhoneObj.number && !isValidPhoneNumber(currentPhoneObj.number, phoneIso) && (
+              <span className="text-red-500 text-[10px] leading-tight">Incomplete/Invalid number for selected country</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1148,9 +1167,9 @@ function formatPhone(value) {
   if (typeof value === "object") {
     const rawNum = String(value.number || "").replace(/\D/g, "");
     if (!rawNum) return "";
-    let formattedNum = rawNum;
-    if (rawNum.length === 10) formattedNum = `${rawNum.slice(0, 5)} ${rawNum.slice(5)}`;
-    return `${value.countryCode || ""} ${formattedNum}`.trim();
+    const iso = value.iso || 'IN';
+    const formatter = new AsYouType(iso);
+    return formatter.input((value.countryCode || "") + rawNum);
   }
   const raw = String(value || "").trim();
   const digits = raw.replace(/\D/g, "");

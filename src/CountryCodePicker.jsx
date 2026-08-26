@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown, Search, Check } from 'lucide-react';
 import { COUNTRIES } from './countries';
 
-export default function CountryCodePicker({ value, onChange, disabled }) {
+export default function CountryCodePicker({ value, iso, onChange, disabled }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const wrapperRef = useRef(null);
@@ -27,7 +27,7 @@ export default function CountryCodePicker({ value, onChange, disabled }) {
         );
     }, [search]);
 
-    const selected = COUNTRIES.find(c => c.code === value) || { flag: '🌐', code: value || '+91' };
+    const selected = COUNTRIES.find(c => c.iso === iso) || COUNTRIES.find(c => c.code === value) || { flag: '🌐', code: value || '+91' };
 
     return (
         <div className="relative" ref={wrapperRef}>
@@ -66,7 +66,7 @@ export default function CountryCodePicker({ value, onChange, disabled }) {
                                     key={`${c.iso}-${c.code}-${i}`}
                                     type="button"
                                     onClick={() => {
-                                        onChange(c.code, c.name);
+                                        onChange(c.code, c.name, c.iso);
                                         setIsOpen(false);
                                         setSearch('');
                                     }}
@@ -75,7 +75,7 @@ export default function CountryCodePicker({ value, onChange, disabled }) {
                                     <span className="w-5 shrink-0 text-left leading-none">{c.flag}</span>
                                     <span className="text-xs text-slate-600 w-12 shrink-0 font-medium leading-none">{c.code}</span>
                                     <span className="text-xs text-slate-800 truncate pr-2 leading-none flex-1 overflow-hidden" title={c.name}>{c.name}</span>
-                                    {value === c.code && <Check size={14} className="text-teal-600 ml-auto shrink-0 leading-none" />}
+                                    {(iso ? iso === c.iso : value === c.code) && <Check size={14} className="text-teal-600 ml-auto shrink-0 leading-none" />}
                                 </button>
                             ))
                         )}
