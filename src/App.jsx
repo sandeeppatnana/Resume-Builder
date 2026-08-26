@@ -211,7 +211,7 @@ function ComboboxField({ label, value, onChange, options, placeholder, className
         className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
       />
       {isOpen && filteredOptions.length > 0 && (
-        <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-48 overflow-auto">
+        <ul className="absolute z-50 w-full top-full mt-1 bg-white border border-slate-200 rounded-md shadow-xl max-h-48 overflow-auto">
           {filteredOptions.map((opt) => (
             <li
               key={opt}
@@ -312,7 +312,7 @@ function EntryCard({ title, onDelete, onMoveUp, onMoveDown, canUp, canDown, chil
 
 function CollapsibleSection({ title, open, onToggle, children, count, dragHandle, dragging }) {
   return (
-    <div className={`border border-slate-200 rounded-lg bg-white overflow-hidden transition-all ${dragging ? "opacity-50 shadow-lg" : "hover:border-slate-300"}`}>
+    <div className={`border border-slate-200 rounded-lg bg-white transition-all ${dragging ? "opacity-50 shadow-lg" : "hover:border-slate-300"} ${open ? 'overflow-visible' : 'overflow-hidden'}`}>
       <div
         role="button"
         tabIndex={0}
@@ -323,7 +323,7 @@ function CollapsibleSection({ title, open, onToggle, children, count, dragHandle
             onToggle();
           }
         }}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50"
+        className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 ${open ? 'rounded-t-[7px]' : ''}`}
       >
         <span className="text-sm font-semibold text-slate-800 flex items-center gap-2">
           {dragHandle}
@@ -910,7 +910,13 @@ function LanguagesEditor({ data, update }) {
         >
           <div className="grid grid-cols-2 gap-3">
             <Field label="Language" value={c.name} onChange={(v) => setItem(c.id, { name: v })} />
-            <Field label="Proficiency" value={c.proficiency} onChange={(v) => setItem(c.id, { proficiency: v })} placeholder="e.g. Native, Fluent, Beginner" />
+            <ComboboxField
+              label="Proficiency"
+              value={c.proficiency}
+              onChange={(v) => setItem(c.id, { proficiency: v })}
+              options={['Beginner', 'Intermediate', 'Advanced', 'Fluent', 'Native']}
+              placeholder="e.g. Native, Fluent, Beginner"
+            />
           </div>
         </EntryCard>
       ))}
@@ -1357,6 +1363,7 @@ function ResumeATS({ data, pageSettings }) {
           {certifications.map((c) => (
             <p key={c.id} className="text-[11px] mb-0.5">
               <span className="font-bold ">{c.name}</span>{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && ` (${c.issueDate})`}
+              {c.url && <span className="ml-1"> <a href={c.url.match(/^https?:\/\//) ? c.url : `https://${c.url}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">{c.url}</a></span>}
             </p>
           ))}
         </Section>
@@ -1570,6 +1577,7 @@ function ResumeModern({ data, pageSettings }) {
               <div key={c.id} className="mb-1.5 last:mb-0">
                 <p className="text-[11px] font-semibold text-slate-900 ">{c.name}</p>
                 <p className="text-[10.5px] text-slate-600 ">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
+                {c.url && <a href={c.url.match(/^https?:\/\//) ? c.url : `https://${c.url}`} className="text-[10.5px] hover:opacity-80 break-all underline" style={{ color: accent }} target="_blank" rel="noreferrer">{c.url}</a>}
               </div>
             ))}
           </Section>
@@ -1798,9 +1806,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {certifications.length > 0 && (
         <Section title="Certifications" style={sectionOrderStyle(data, "certifications")}>
           {certifications.map((c) => (
-            <p key={c.id} className="text-[10.5px] mb-0.5 text-slate-600 ">
-              {c.name}{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && `, ${c.issueDate}`}
-            </p>
+            <div key={c.id} className="mb-1.5 last:mb-0">
+              <p className="text-[10.5px] text-slate-600 ">
+                {c.name}{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && `, ${c.issueDate}`}
+              </p>
+              {c.url && <a href={c.url.match(/^https?:\/\//) ? c.url : `https://${c.url}`} className="text-[10.5px] hover:text-slate-900 underline break-all" target="_blank" rel="noreferrer">{c.url}</a>}
+            </div>
           ))}
         </Section>
       )}
@@ -1977,9 +1988,10 @@ function ResumeProfessional({ data, pageSettings }) {
           <div className="hidden mt-5">
             <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2 break-after-avoid">Certifications</h2>
             {certifications.map((c) => (
-              <div key={c.id} className="mb-1.5 last:mb-0">
+              <div key={c.id} className="mb-2 last:mb-0">
                 <p className="text-[9.5px] font-semibold text-slate-800">{c.name}</p>
                 <p className="text-[9px] text-slate-500">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
+                {c.url && <a href={c.url.match(/^https?:\/\//) ? c.url : `https://${c.url}`} className="text-[9px] text-slate-500 hover:text-slate-800 underline break-all block mt-0.5" target="_blank" rel="noreferrer">{c.url}</a>}
               </div>
             ))}
           </div>
@@ -2380,11 +2392,13 @@ function PreviewPanel({ data, template, onPageSettingsChange }) {
   }, [fitToScreen]);
 
   const TemplateComp = TEMPLATE_COMPONENTS[template] || ResumeATS;
+  const activeTemplateDef = TEMPLATES.find(t => t.id === template);
+  const templateName = activeTemplateDef ? activeTemplateDef.name : '';
 
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="resume-preview-toolbar flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 px-4 py-2 bg-white shrink-0">
-        <span className="text-xs font-medium text-slate-500">Live preview</span>
+        <span className="text-xs font-medium text-slate-500">Live preview {templateName && `\u2014 ${templateName}`}</span>
         <PageSizeControls settings={data.pageSettings} onChange={onPageSettingsChange} />
         <div className="flex items-center gap-1">
           <IconBtn title="Zoom out" onClick={() => setScale((s) => Math.max(0.35, +(s - 0.1).toFixed(2)))}>

@@ -135,6 +135,9 @@ export function UniversalTemplate({ data, pageSettings, config }) {
                 <div className={config.styles.itemSubHeader}>
                     <span>{c.organization}</span>
                 </div>
+                {c.url && (
+                    <div className={`${config.styles.text} mt-0.5`}><a href={c.url.match(/^https?:\/\//) ? c.url : `https://${c.url}`} target="_blank" rel="noreferrer" className="underline hover:opacity-80 break-all">{c.url}</a></div>
+                )}
             </div>
         ));
     }
