@@ -6,6 +6,18 @@ import { validatePhoneNumberLength, isValidPhoneNumber, AsYouType } from 'libpho
 import RichTextEditor from "./RichTextEditor";
 import CountryCodePicker from "./CountryCodePicker";
 import { COUNTRIES } from "./countries";
+import {
+  ResumeATSPro,
+  ResumeModernPro,
+  ResumeExecutive,
+  ResumeCorporate,
+  ResumeTech,
+  ResumeConsulting,
+  ResumePM,
+  ResumeCompact,
+  ResumeTwoColumn,
+  ResumeAcademic
+} from "./UniversalTemplate";
 
 export function normalizeToHtml(value) {
   if (Array.isArray(value)) {
@@ -49,7 +61,7 @@ const Linkedin = ({ size = 24, className, ...props }) => (
 );
 
 /* ---------------------------------------------------------------------- */
-/* Utilities                                                               */
+/* Utilities */
 /* ---------------------------------------------------------------------- */
 
 let uidCounter = 0;
@@ -83,7 +95,7 @@ function pageDimensions(settings) {
   return pageSettings.orientation === "landscape" ? { width: base[1], height: base[0] } : { width: base[0], height: base[1] };
 }
 
-function customSectionKey(id) {
+export function customSectionKey(id) {
   return `custom:${id}`;
 }
 
@@ -143,6 +155,16 @@ const TEMPLATES = [
   { id: "modern", name: "Modern", blurb: "Clean layout with a subtle accent color." },
   { id: "minimal", name: "Minimal", blurb: "Lots of whitespace, thin dividers, quiet typography." },
   { id: "professional", name: "Professional", blurb: "Two-column layout suited to experienced professionals." },
+  { id: "ats_pro", name: "ATS Professional", blurb: "Clean serif fonts, elegant horizontal thin dividers." },
+  { id: "modern_pro", name: "Modern Professional", blurb: "Structured headers, highly readable with subtle styling." },
+  { id: "executive", name: "Executive", blurb: "Prominent summary styling, stately proportions." },
+  { id: "corporate", name: "Corporate", blurb: "Traditional block structuring with subtle emphasis." },
+  { id: "tech", name: "Tech / Engineering", blurb: "Monospace accents and highly compressed layout." },
+  { id: "consulting", name: "Consulting", blurb: "Strict single-column, classic structured serif." },
+  { id: "pm", name: "Project Management", blurb: "Emphasized bullet hierarchies and strong structural separation." },
+  { id: "compact", name: "Compact One-Page", blurb: "Dense line-heights, zero extraneous padding." },
+  { id: "two_column", name: "Clean Two-Column", blurb: "Specialized dynamic flow splitting." },
+  { id: "academic", name: "Academic / Research", blurb: "Traditional split, focuses intensely on textual density." }
 ];
 
 function fileSafe(str) {
@@ -150,7 +172,7 @@ function fileSafe(str) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Small form atoms                                                        */
+/* Small form atoms */
 /* ---------------------------------------------------------------------- */
 
 const DEGREE_OPTIONS = ['B.Tech', 'Bachelor of Technology', 'BE', 'B.Sc', 'BCA', 'BBA', 'MBA', 'M.Tech', 'ME', 'M.Sc', 'MCA', 'PhD', 'Diploma', 'High School', 'Associate Degree', 'MD'];
@@ -484,7 +506,7 @@ function SortableSectionList({ items, onReorder, renderItem }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Section editors                                                         */
+/* Section editors */
 /* ---------------------------------------------------------------------- */
 
 function PersonalEditor({ data, update }) {
@@ -1127,10 +1149,10 @@ function CustomFieldCard({ field, onChange, onDelete, drag }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Resume templates                                                        */
+/* Resume templates */
 /* ---------------------------------------------------------------------- */
 
-function pageStyle(pageSettings) {
+export function pageStyle(pageSettings) {
   const dimensions = pageDimensions(pageSettings);
   return {
     width: `${dimensions.width}mm`,
@@ -1139,11 +1161,11 @@ function pageStyle(pageSettings) {
   };
 }
 
-function sectionOrderStyle(data, key) {
+export function sectionOrderStyle(data, key) {
   return { order: normalizeSectionOrder(data.sectionOrder, data.customFields).indexOf(key) };
 }
 
-function CustomFieldSection({ field, style, variant = "ats" }) {
+export function CustomFieldSection({ field, style, variant = "ats" }) {
   const styles = {
     ats: { wrapper: "mb-3", heading: "text-[12px] font-bold uppercase tracking-wide border-b border-black pb-0.5 mb-1.5", description: "text-[11.5px] leading-relaxed whitespace-pre-wrap", bullet: "text-[11px] leading-snug whitespace-pre-wrap" },
     modern: { wrapper: "mb-4", heading: "text-[11px] font-bold uppercase tracking-widest mb-2 text-teal-600", description: "text-[11.5px] leading-relaxed text-slate-700 whitespace-pre-wrap", bullet: "text-[11px] leading-snug text-slate-700 whitespace-pre-wrap" },
@@ -1153,7 +1175,7 @@ function CustomFieldSection({ field, style, variant = "ats" }) {
   const bullets = (field.bullets || []).filter(Boolean);
   if (!field.title && !field.description && bullets.length === 0) return null;
   return (
-    <section className={styles.wrapper + " break-inside-avoid"} style={style}>
+    <section className={styles.wrapper + " "} style={style}>
       {field.title && <h2 className={styles.heading}>{field.title}</h2>}
       {(field.description || bullets.length > 0) && (
         <div className={`resume-richtext ${styles.description}`} dangerouslySetInnerHTML={{ __html: field.description?.includes('<') ? normalizeToHtml(field.description) : normalizeToHtml(field.description) + normalizeToHtml(bullets) }} />
@@ -1195,7 +1217,7 @@ function displayUrl(value) {
   return String(value || "").trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
 }
 
-function contactItems(p) {
+export function contactItems(p) {
   const locStr = [p.location, p.country].filter(Boolean).join(", ");
   return [
     { key: "location", label: locStr, icon: MapPin },
@@ -1207,8 +1229,8 @@ function contactItems(p) {
   ].filter((item) => item.label);
 }
 
-function ContactLink({ href, children, className = "" }) {
-  if (!href) return <span className={className}>{children}</span>;
+export function ContactLink({ href, children, className = "" }) {
+  if (!href) return <span className={` ${className}`.trim()}>{children}</span>;
   return (
     <a href={href} className={`text-inherit no-underline hover:underline underline-offset-2 ${className}`.trim()}>
       {children}
@@ -1216,18 +1238,17 @@ function ContactLink({ href, children, className = "" }) {
   );
 }
 
-function ContactLine({ p, className, withIcons = false }) {
+export function ContactLine({ p, className, withIcons = false }) {
   const items = contactItems(p);
   if (items.length === 0) return null;
   return (
-    <div className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 ${className || ""}`}>
-      {items.map((item, i) => {
-        const Icon = item.icon;
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${className}`}>
+      {items.map((item) => {
+        if (!withIcons) return <ContactLink key={item.key} href={item.href} className=" min-w-0 max-w-full">{item.label}</ContactLink>;
         return (
-          <span key={item.key} className="inline-flex items-center gap-1">
-            {i > 0 && !withIcons && <span className="text-current opacity-40 select-none" aria-hidden>|</span>}
-            {withIcons && <Icon className="shrink-0 opacity-70" size={11} strokeWidth={2} aria-hidden />}
-            <ContactLink href={item.href}>{item.label}</ContactLink>
+          <span key={item.key} className="flex items-center gap-1 min-w-0 max-w-full">
+            <item.icon size={12} className="text-slate-400 shrink-0" />
+            <ContactLink href={item.href} className=" min-w-0 max-w-full">{item.label}</ContactLink>
           </span>
         );
       })}
@@ -1235,20 +1256,19 @@ function ContactLine({ p, className, withIcons = false }) {
   );
 }
 
-function ContactStack({ p, className }) {
+export function ContactStack({ p, className }) {
   const items = contactItems(p);
   if (items.length === 0) return null;
   return (
-    <div className={className}>
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <p key={item.key} className="text-[10px] text-slate-600 flex items-start gap-1.5 leading-snug">
-            <Icon className="shrink-0 mt-0.5 opacity-70" size={11} strokeWidth={2} aria-hidden />
-            <ContactLink href={item.href} className="break-all">{item.label}</ContactLink>
-          </p>
-        );
-      })}
+    <div className={`flex flex-col gap-0.5 ${className}`}>
+      {items.map((item) => (
+        <span key={item.key} className="flex items-center gap-1.5 min-w-0 max-w-full">
+          <item.icon size={11} className="text-slate-400 shrink-0" />
+          <ContactLink href={item.href} className="text-[10px] text-slate-500 min-w-0 max-w-full">
+            {item.label}
+          </ContactLink>
+        </span>
+      ))}
     </div>
   );
 }
@@ -1257,8 +1277,9 @@ function ResumeATS({ data, pageSettings }) {
   const { personal: p, summary, experience, skillGroups, projects, education, certifications } = data;
   return (
     <div id="resume-print-page" className="bg-white text-black flex flex-col" style={{ ...pageStyle(pageSettings), padding: "16mm 18mm" }}>
-      <h1 className="text-[22px] font-bold tracking-tight">{p.fullName}</h1>
-      {p.title && <p className="text-[12.5px] mt-0.5">{p.title}</p>}
+      <style type="text/css">{` @media print { @page { margin: 16mm 18mm !important; } #resume-print-page { padding: 0 !important; width: 100% !important; min-height: auto !important; } } `}</style>
+      <h1 className="text-[22px] font-bold tracking-tight ">{p.fullName}</h1>
+      {p.title && <p className="text-[12.5px] mt-0.5 ">{p.title}</p>}
       <ContactLine p={p} className="text-[11px] mt-1.5 text-black" />
       <hr className="my-3 border-black" />
 
@@ -1271,14 +1292,14 @@ function ResumeATS({ data, pageSettings }) {
       {experience.length > 0 && (
         <Section title="Experience" style={sectionOrderStyle(data, "experience")}>
           {experience.map((e) => (
-            <div key={e.id} className="mb-2.5 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[12.5px] font-bold">{e.jobTitle}</span>
-                <span className="text-[11px]">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
+            <div key={e.id} className="mb-2.5 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[12.5px] font-bold ">{e.jobTitle}</span>
+                <span className="text-[11px] shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
               </div>
               <div className="flex justify-between items-baseline text-[11.5px] italic">
-                <span>{e.company}</span>
-                <span>{e.location}</span>
+                <span className="">{e.company}</span>
+                <span className="shrink-0 ml-2">{e.location}</span>
               </div>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
                 <div className="text-[11px] mt-1 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
@@ -1291,7 +1312,7 @@ function ResumeATS({ data, pageSettings }) {
       {skillGroups.length > 0 && (
         <Section title="Skills" style={sectionOrderStyle(data, "skills")}>
           {skillGroups.map((g) => (
-            <p key={g.id} className="text-[11px] mb-0.5 break-inside-avoid">
+            <p key={g.id} className="text-[11px] mb-0.5">
               <span className="font-bold">{g.name}: </span>
               {g.skills.join(", ")}
             </p>
@@ -1302,12 +1323,12 @@ function ResumeATS({ data, pageSettings }) {
       {projects.length > 0 && (
         <Section title="Projects" style={sectionOrderStyle(data, "projects")}>
           {projects.map((pr) => (
-            <div key={pr.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <p className="text-[12px] font-bold">{pr.name}</p>
+            <div key={pr.id} className="mb-2 last:mb-0">
+              <p className="text-[12px] font-bold ">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
                 <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
-              {pr.tools && <p className="text-[11px] italic mt-0.5">Tools: {pr.tools}</p>}
+              {pr.tools && <p className="text-[11px] italic mt-0.5 ">Tools: {pr.tools}</p>}
             </div>
           ))}
         </Section>
@@ -1316,13 +1337,13 @@ function ResumeATS({ data, pageSettings }) {
       {education.length > 0 && (
         <Section title="Education" style={sectionOrderStyle(data, "education")}>
           {education.map((ed) => (
-            <div key={ed.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
+            <div key={ed.id} className="mb-1.5 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
                 <div>
-                  <p className="text-[11.5px] font-bold">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
-                  <p className="text-[11px]">{ed.institution}{ed.location && `, ${ed.location}`}{ed.grade && ` \u2014 ${ed.grade}`}</p>
+                  <p className="text-[11.5px] font-bold ">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
+                  <p className="text-[11px] ">{ed.institution}{ed.location && `, ${ed.location}`}{ed.grade && ` \u2014 ${ed.grade}`}</p>
                 </div>
-                <span className="text-[11px]">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
+                <span className="text-[11px] shrink-0 ml-2">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
               </div>
               {ed.description && (
                 <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(ed.description) }} />
@@ -1334,8 +1355,8 @@ function ResumeATS({ data, pageSettings }) {
       {certifications.length > 0 && (
         <Section title="Certifications" style={sectionOrderStyle(data, "certifications")}>
           {certifications.map((c) => (
-            <p key={c.id} className="text-[11px] mb-0.5 break-inside-avoid">
-              <span className="font-bold">{c.name}</span>{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && ` (${c.issueDate})`}
+            <p key={c.id} className="text-[11px] mb-0.5">
+              <span className="font-bold ">{c.name}</span>{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && ` (${c.issueDate})`}
             </p>
           ))}
         </Section>
@@ -1343,7 +1364,7 @@ function ResumeATS({ data, pageSettings }) {
       {data.Languages?.length > 0 && (
         <Section title="Languages" style={sectionOrderStyle(data, "Languages")}>
           {data.Languages.map((l) => (
-            <p key={l.id} className="text-[11px] mb-0.5 break-inside-avoid">
+            <p key={l.id} className="text-[11px] mb-0.5">
               <span className="font-bold">{l.name}</span>{l.proficiency && ` \u2014 ${l.proficiency}`}
             </p>
           ))}
@@ -1352,9 +1373,9 @@ function ResumeATS({ data, pageSettings }) {
       {data.achievements?.length > 0 && (
         <Section title="Achievements" style={sectionOrderStyle(data, "achievements")}>
           {data.achievements.map((a) => (
-            <div key={a.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-              <p className="text-[11.5px] font-bold">{a.title}{a.date && <span className="text-[11px] font-normal float-right">{a.date}</span>}</p>
-              {a.organization && <p className="text-[11px] italic">{a.organization}</p>}
+            <div key={a.id} className="mb-1.5 last:mb-0">
+              <p className="text-[11.5px] font-bold ">{a.title}{a.date && <span className="text-[11px] font-normal float-right">{a.date}</span>}</p>
+              {a.organization && <p className="text-[11px] italic ">{a.organization}</p>}
               {a.description && <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(a.description) }} />}
             </div>
           ))}
@@ -1364,7 +1385,7 @@ function ResumeATS({ data, pageSettings }) {
         <Section title="Links" style={sectionOrderStyle(data, "links")}>
           <div className="flex flex-wrap gap-x-4">
             {data.links.map((l) => (
-              <div key={l.id} className="text-[11px]">
+              <div key={l.id} className="text-[11px] ">
                 <span className="font-bold">{l.platform}</span>:{" "}
                 <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:underline" target="_blank" rel="noreferrer">
                   {l.url}
@@ -1377,14 +1398,14 @@ function ResumeATS({ data, pageSettings }) {
       {data.internships?.length > 0 && (
         <Section title="Internships" style={sectionOrderStyle(data, "internships")}>
           {data.internships.map((e) => (
-            <div key={e.id} className="mb-2.5 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[12.5px] font-bold">{e.jobTitle}</span>
-                <span className="text-[11px]">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+            <div key={e.id} className="mb-2.5 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[12.5px] font-bold ">{e.jobTitle}</span>
+                <span className="text-[11px] shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
               </div>
               <div className="flex justify-between items-baseline text-[11.5px] italic">
-                <span>{e.company}</span>
-                <span>{e.location}</span>
+                <span className="">{e.company}</span>
+                <span className="shrink-0 ml-2">{e.location}</span>
               </div>
               {e.summary && <div className="text-[11px] mt-1 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.summary) }} />}
             </div>
@@ -1394,9 +1415,9 @@ function ResumeATS({ data, pageSettings }) {
       {data.courses?.length > 0 && (
         <Section title="Courses" style={sectionOrderStyle(data, "courses")}>
           {data.courses.map((c) => (
-            <div key={c.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-              <p className="text-[11.5px] font-bold">{c.name}{c.date && <span className="text-[11px] font-normal float-right">{c.date}</span>}</p>
-              {(c.provider || c.url) && <p className="text-[11px] italic">{c.provider}{c.url && ` \u2014 ${c.url}`}</p>}
+            <div key={c.id} className="mb-1.5 last:mb-0">
+              <p className="text-[11.5px] font-bold ">{c.name}{c.date && <span className="text-[11px] font-normal float-right">{c.date}</span>}</p>
+              {(c.provider || c.url) && <p className="text-[11px] italic ">{c.provider}{c.url && ` \u2014 ${c.url}`}</p>}
               {c.description && <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(c.description) }} />}
             </div>
           ))}
@@ -1405,12 +1426,12 @@ function ResumeATS({ data, pageSettings }) {
       {data.volunteering?.length > 0 && (
         <Section title="Volunteering" style={sectionOrderStyle(data, "volunteering")}>
           {data.volunteering.map((e) => (
-            <div key={e.id} className="mb-2.5 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[12.5px] font-bold">{e.role}</span>
-                <span className="text-[11px]">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+            <div key={e.id} className="mb-2.5 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[12.5px] font-bold ">{e.role}</span>
+                <span className="text-[11px] shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
               </div>
-              <div className="text-[11.5px] italic">{e.organization}</div>
+              <div className="text-[11.5px] italic ">{e.organization}</div>
               {e.description && <div className="text-[11px] mt-1 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.description) }} />}
             </div>
           ))}
@@ -1419,9 +1440,9 @@ function ResumeATS({ data, pageSettings }) {
       {data.publications?.length > 0 && (
         <Section title="Publications" style={sectionOrderStyle(data, "publications")}>
           {data.publications.map((p) => (
-            <div key={p.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-              <p className="text-[11.5px] font-bold">{p.title}{p.date && <span className="text-[11px] font-normal float-right">{p.date}</span>}</p>
-              {(p.publisher || p.url) && <p className="text-[11px] italic">{p.publisher}{p.url && ` \u2014 ${p.url}`}</p>}
+            <div key={p.id} className="mb-1.5 last:mb-0">
+              <p className="text-[11.5px] font-bold ">{p.title}{p.date && <span className="text-[11px] font-normal float-right">{p.date}</span>}</p>
+              {(p.publisher || p.url) && <p className="text-[11px] italic ">{p.publisher}{p.url && ` \u2014 ${p.url}`}</p>}
               {p.description && <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(p.description) }} />}
             </div>
           ))}
@@ -1429,7 +1450,7 @@ function ResumeATS({ data, pageSettings }) {
       )}
       {data.interests?.length > 0 && (
         <Section title="Interests" style={sectionOrderStyle(data, "interests")}>
-          <p className="text-[11px] mb-0.5 break-inside-avoid">
+          <p className="text-[11px] mb-0.5">
             {data.interests.map(i => i.name).filter(Boolean).join(" \u2022 ")}
           </p>
         </Section>
@@ -1437,9 +1458,9 @@ function ResumeATS({ data, pageSettings }) {
       {data.customSection?.items?.length > 0 && (
         <Section title={data.customSection.sectionTitle || "Custom Section"} style={sectionOrderStyle(data, "customSection")}>
           {data.customSection.items.map((i) => (
-            <div key={i.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-              <p className="text-[11.5px] font-bold">{i.entryTitle}{i.date && <span className="text-[11px] font-normal float-right">{i.date}</span>}</p>
-              {i.url && <p className="text-[11px] italic">{i.url}</p>}
+            <div key={i.id} className="mb-1.5 last:mb-0">
+              <p className="text-[11.5px] font-bold ">{i.entryTitle}{i.date && <span className="text-[11px] font-normal float-right">{i.date}</span>}</p>
+              {i.url && <p className="text-[11px] italic ">{i.url}</p>}
               {i.description && <div className="text-[11px] mt-0.5 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(i.description) }} />}
             </div>
           ))}
@@ -1455,7 +1476,7 @@ function ResumeATS({ data, pageSettings }) {
   function Section({ title, children, style }) {
     return (
       <div className="mb-3" style={style}>
-        <h2 className="text-[12px] font-bold uppercase tracking-wide border-b border-black pb-0.5 mb-1.5">{title}</h2>
+        <h2 className="text-[12px] font-bold uppercase tracking-wide border-b border-black pb-0.5 mb-1.5 break-after-avoid">{title}</h2>
         {children}
       </div>
     );
@@ -1467,8 +1488,9 @@ function ResumeModern({ data, pageSettings }) {
   const accent = "#0d9488";
   return (
     <div id="resume-print-page" className="bg-white text-slate-800 flex flex-col" style={{ ...pageStyle(pageSettings), padding: "16mm 18mm" }}>
-      <h1 className="text-[26px] font-bold" style={{ color: "#0f172a" }}>{p.fullName}</h1>
-      {p.title && <p className="text-[13px] font-medium mt-0.5" style={{ color: accent }}>{p.title}</p>}
+      <style type="text/css">{` @media print { @page { margin: 16mm 18mm !important; } #resume-print-page { padding: 0 !important; width: 100% !important; min-height: auto !important; } } `}</style>
+      <h1 className="text-[26px] font-bold " style={{ color: "#0f172a" }}>{p.fullName}</h1>
+      {p.title && <p className="text-[13px] font-medium mt-0.5 " style={{ color: accent }}>{p.title}</p>}
       <ContactLine p={p} withIcons className="text-[10.5px] mt-1.5 text-slate-500" />
       <div className="h-[3px] mt-3 mb-4 rounded" style={{ background: accent, width: "48px" }} />
 
@@ -1481,14 +1503,14 @@ function ResumeModern({ data, pageSettings }) {
       {experience.length > 0 && (
         <Section title="Experience" accent={accent} style={sectionOrderStyle(data, "experience")}>
           {experience.map((e) => (
-            <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[13px] font-semibold text-slate-900">{e.jobTitle}</span>
-                <span className="text-[10.5px] text-slate-500">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
+            <div key={e.id} className="mb-3 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[13px] font-semibold text-slate-900 ">{e.jobTitle}</span>
+                <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
               </div>
               <div className="flex justify-between items-baseline text-[11.5px] mt-0.5" style={{ color: accent }}>
-                <span className="font-medium">{e.company}</span>
-                <span className="text-slate-500">{e.location}</span>
+                <span className="font-medium ">{e.company}</span>
+                <span className="text-slate-500 shrink-0 ml-2">{e.location}</span>
               </div>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
                 <div className="text-[11px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
@@ -1503,8 +1525,10 @@ function ResumeModern({ data, pageSettings }) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {skillGroups.map((g) => (
               <div key={g.id}>
-                <p className="text-[10.5px] font-semibold text-slate-800">{g.name}</p>
-                <p className="text-[10.5px] text-slate-600 mt-0.5">{g.skills.join(", ")}</p>
+                <p className="text-[10.5px] text-slate-600 mt-0.5 ">
+                  <span className="font-semibold text-slate-800 ">{g.name}: </span>
+                  {g.skills.join(", ")}
+                </p>
               </div>
             ))}
           </div>
@@ -1514,12 +1538,12 @@ function ResumeModern({ data, pageSettings }) {
       {projects.length > 0 && (
         <Section title="Projects" accent={accent} style={sectionOrderStyle(data, "projects")}>
           {projects.map((pr) => (
-            <div key={pr.id} className="mb-2.5 last:mb-0 break-inside-avoid">
-              <p className="text-[12px] font-semibold text-slate-900">{pr.name}</p>
+            <div key={pr.id} className="mb-2.5 last:mb-0">
+              <p className="text-[12px] font-semibold text-slate-900 ">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
                 <div className="text-[11px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
-              {pr.tools && <p className="text-[10.5px] mt-0.5" style={{ color: accent }}>{pr.tools}</p>}
+              {pr.tools && <p className="text-[10.5px] mt-0.5 " style={{ color: accent }}>{pr.tools}</p>}
             </div>
           ))}
         </Section>
@@ -1529,10 +1553,10 @@ function ResumeModern({ data, pageSettings }) {
         {education.length > 0 && (
           <Section title="Education" accent={accent} style={sectionOrderStyle(data, "education")}>
             {education.map((ed) => (
-              <div key={ed.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-                <p className="text-[11px] font-semibold text-slate-900">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
-                <p className="text-[10.5px] text-slate-600">{ed.institution}</p>
-                <p className="text-[10px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
+              <div key={ed.id} className="mb-1.5 last:mb-0">
+                <p className="text-[11px] font-semibold text-slate-900 ">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
+                <p className="text-[10.5px] text-slate-600 ">{ed.institution}</p>
+                <p className="text-[10px] text-slate-400 ">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
                 {ed.description && (
                   <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(ed.description) }} />
                 )}
@@ -1543,9 +1567,9 @@ function ResumeModern({ data, pageSettings }) {
         {certifications.length > 0 && (
           <Section title="Certifications" accent={accent} style={sectionOrderStyle(data, "certifications")}>
             {certifications.map((c) => (
-              <div key={c.id} className="mb-1.5 last:mb-0 break-inside-avoid">
-                <p className="text-[11px] font-semibold text-slate-900">{c.name}</p>
-                <p className="text-[10.5px] text-slate-600">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
+              <div key={c.id} className="mb-1.5 last:mb-0">
+                <p className="text-[11px] font-semibold text-slate-900 ">{c.name}</p>
+                <p className="text-[10.5px] text-slate-600 ">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
               </div>
             ))}
           </Section>
@@ -1553,8 +1577,8 @@ function ResumeModern({ data, pageSettings }) {
         {data.Languages?.length > 0 && (
           <Section title="Languages" accent={accent} style={sectionOrderStyle(data, "Languages")}>
             {data.Languages.map((l) => (
-              <div key={l.id} className="mb-1 last:mb-0 break-inside-avoid">
-                <p className="text-[10.5px] font-semibold text-slate-800">{l.name} <span className="text-slate-500 font-normal">{l.proficiency && `\u2014 ${l.proficiency}`}</span></p>
+              <div key={l.id} className="mb-1 last:mb-0">
+                <p className="text-[10.5px] font-semibold text-slate-800 ">{l.name} <span className="text-slate-500 font-normal">{l.proficiency && `\u2014 ${l.proficiency}`}</span></p>
               </div>
             ))}
           </Section>
@@ -1562,12 +1586,12 @@ function ResumeModern({ data, pageSettings }) {
         {data.achievements?.length > 0 && (
           <Section title="Achievements" accent={accent} style={sectionOrderStyle(data, "achievements")}>
             {data.achievements.map((a) => (
-              <div key={a.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11.5px] font-semibold text-slate-900">{a.title}</span>
-                  <span className="text-[10.5px] text-slate-500">{a.date}</span>
+              <div key={a.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[11.5px] font-semibold text-slate-900 ">{a.title}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{a.date}</span>
                 </div>
-                {a.organization && <p className="text-[10.5px] font-medium" style={{ color: accent }}>{a.organization}</p>}
+                {a.organization && <p className="text-[10.5px] font-medium " style={{ color: accent }}>{a.organization}</p>}
                 {a.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(a.description) }} />}
               </div>
             ))}
@@ -1577,7 +1601,7 @@ function ResumeModern({ data, pageSettings }) {
           <Section title="Links" accent={accent} style={sectionOrderStyle(data, "links")}>
             <div className="flex flex-wrap gap-x-4">
               {data.links.map((l) => (
-                <div key={l.id} className="text-[10.5px] font-medium text-slate-700">
+                <div key={l.id} className="text-[10.5px] font-medium text-slate-700 ">
                   {l.platform}:{" "}
                   <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:opacity-80" style={{ color: accent }} target="_blank" rel="noreferrer">
                     {l.url}
@@ -1590,14 +1614,14 @@ function ResumeModern({ data, pageSettings }) {
         {data.internships?.length > 0 && (
           <Section title="Internships" accent={accent} style={sectionOrderStyle(data, "internships")}>
             {data.internships.map((e) => (
-              <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-semibold text-slate-900">{e.jobTitle}</span>
-                  <span className="text-[10.5px] text-slate-500">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+              <div key={e.id} className="mb-3 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[13px] font-semibold text-slate-900 ">{e.jobTitle}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
                 </div>
                 <div className="flex justify-between items-baseline text-[11.5px] mt-0.5" style={{ color: accent }}>
-                  <span className="font-medium">{e.company}</span>
-                  <span className="text-slate-500">{e.location}</span>
+                  <span className="font-medium ">{e.company}</span>
+                  <span className="text-slate-500 shrink-0 ml-2">{e.location}</span>
                 </div>
                 {e.summary && <div className="text-[11px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.summary) }} />}
               </div>
@@ -1607,12 +1631,12 @@ function ResumeModern({ data, pageSettings }) {
         {data.courses?.length > 0 && (
           <Section title="Courses" accent={accent} style={sectionOrderStyle(data, "courses")}>
             {data.courses.map((c) => (
-              <div key={c.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11.5px] font-semibold text-slate-900">{c.name}</span>
-                  <span className="text-[10.5px] text-slate-500">{c.date}</span>
+              <div key={c.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[11.5px] font-semibold text-slate-900 ">{c.name}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{c.date}</span>
                 </div>
-                {(c.provider || c.url) && <p className="text-[10.5px] font-medium" style={{ color: accent }}>{c.provider}{c.url && ` \u00b7 ${c.url}`}</p>}
+                {(c.provider || c.url) && <p className="text-[10.5px] font-medium " style={{ color: accent }}>{c.provider}{c.url && ` \u00b7 ${c.url}`}</p>}
                 {c.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(c.description) }} />}
               </div>
             ))}
@@ -1621,12 +1645,12 @@ function ResumeModern({ data, pageSettings }) {
         {data.volunteering?.length > 0 && (
           <Section title="Volunteering" accent={accent} style={sectionOrderStyle(data, "volunteering")}>
             {data.volunteering.map((e) => (
-              <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[12px] font-semibold text-slate-900">{e.role}</span>
-                  <span className="text-[10.5px] text-slate-500">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+              <div key={e.id} className="mb-3 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[12px] font-semibold text-slate-900 ">{e.role}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
                 </div>
-                <div className="text-[11px] font-medium mt-0.5" style={{ color: accent }}>{e.organization}</div>
+                <div className="text-[11px] font-medium mt-0.5 " style={{ color: accent }}>{e.organization}</div>
                 {e.description && <div className="text-[11px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.description) }} />}
               </div>
             ))}
@@ -1635,12 +1659,12 @@ function ResumeModern({ data, pageSettings }) {
         {data.publications?.length > 0 && (
           <Section title="Publications" accent={accent} style={sectionOrderStyle(data, "publications")}>
             {data.publications.map((p) => (
-              <div key={p.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11.5px] font-semibold text-slate-900">{p.title}</span>
-                  <span className="text-[10.5px] text-slate-500">{p.date}</span>
+              <div key={p.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[11.5px] font-semibold text-slate-900 ">{p.title}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{p.date}</span>
                 </div>
-                {(p.publisher || p.url) && <p className="text-[10.5px] font-medium" style={{ color: accent }}>{p.publisher}{p.url && ` \u00b7 ${p.url}`}</p>}
+                {(p.publisher || p.url) && <p className="text-[10.5px] font-medium " style={{ color: accent }}>{p.publisher}{p.url && ` \u00b7 ${p.url}`}</p>}
                 {p.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(p.description) }} />}
               </div>
             ))}
@@ -1648,7 +1672,7 @@ function ResumeModern({ data, pageSettings }) {
         )}
         {data.interests?.length > 0 && (
           <Section title="Interests" accent={accent} style={sectionOrderStyle(data, "interests")}>
-            <p className="text-[10.5px] text-slate-600 mb-0.5 break-inside-avoid">
+            <p className="text-[10.5px] text-slate-600 mb-0.5 ">
               {data.interests.map(i => i.name).filter(Boolean).join(" \u2022 ")}
             </p>
           </Section>
@@ -1656,12 +1680,12 @@ function ResumeModern({ data, pageSettings }) {
         {data.customSection?.items?.length > 0 && (
           <Section title={data.customSection.sectionTitle || "Custom Section"} accent={accent} style={sectionOrderStyle(data, "customSection")}>
             {data.customSection.items.map((i) => (
-              <div key={i.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11.5px] font-semibold text-slate-900">{i.entryTitle}</span>
-                  <span className="text-[10.5px] text-slate-500">{i.date}</span>
+              <div key={i.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
+                  <span className="text-[11.5px] font-semibold text-slate-900 ">{i.entryTitle}</span>
+                  <span className="text-[10.5px] text-slate-500 shrink-0 ml-2">{i.date}</span>
                 </div>
-                {i.url && <p className="text-[10.5px] font-medium" style={{ color: accent }}>{i.url}</p>}
+                {i.url && <p className="text-[10.5px] font-medium " style={{ color: accent }}>{i.url}</p>}
                 {i.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(i.description) }} />}
               </div>
             ))}
@@ -1677,7 +1701,7 @@ function ResumeModern({ data, pageSettings }) {
   function Section({ title, children, accent, style }) {
     return (
       <div className="mb-4" style={style}>
-        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: accent }}>{title}</h2>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-2 break-after-avoid" style={{ color: accent }}>{title}</h2>
         {children}
       </div>
     );
@@ -1687,10 +1711,22 @@ function ResumeModern({ data, pageSettings }) {
 function ResumeMinimal({ data, pageSettings }) {
   const { personal: p, summary, experience, skillGroups, projects, education, certifications } = data;
   return (
-    <div id="resume-print-page" className="bg-white text-slate-700 flex flex-col" style={{ ...pageStyle(pageSettings), padding: "20mm 22mm" }}>
-      <h1 className="text-[22px] font-light tracking-wide text-slate-900">{p.fullName}</h1>
-      {p.title && <p className="text-[12px] mt-1 text-slate-500">{p.title}</p>}
-      <ContactLine p={p} withIcons className="text-[10px] mt-2 text-slate-400" />
+    <div id="resume-print-page" className="bg-white text-slate-800 flex flex-col" style={{ ...pageStyle(pageSettings), padding: "20mm 22mm" }}>
+      <style type="text/css">{` @media print { @page { margin: 20mm 22mm !important; } #resume-print-page { padding: 0 !important; width: 100% !important; min-height: auto !important; } } `}</style>
+      <header className="text-center mb-3 min-w-0 w-full">
+        <h1 className="text-[20px] font-bold text-slate-900 leading-tight ">{p.fullName}</h1>
+        {p.title && <p className="text-[12px] font-semibold mt-0.5 text-slate-700 ">{p.title}</p>}
+        {contactItems(p).length > 0 && (
+          <div className="flex flex-wrap justify-center items-center gap-x-2 gap-y-1 text-[11px] mt-1 text-slate-600 min-w-0">
+            {contactItems(p).map((c, i) => (
+              <React.Fragment key={c.key}>
+                {i > 0 && <span className="text-slate-300">|</span>}
+                <ContactLink href={c.href} className=" min-w-0">{c.label}</ContactLink>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+      </header>
 
       {summary && (
         <Section title="Summary" style={sectionOrderStyle(data, "summary")}>
@@ -1701,12 +1737,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {experience.length > 0 && (
         <Section title="Experience" style={sectionOrderStyle(data, "experience")}>
           {experience.map((e) => (
-            <div key={e.id} className="mb-4 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[12px] font-medium text-slate-900">{e.jobTitle}</span>
-                <span className="text-[10px] text-slate-400">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
+            <div key={e.id} className="mb-4 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[12px] font-medium text-slate-900 ">{e.jobTitle}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
               </div>
-              <p className="text-[11px] text-slate-500">{e.company}{e.location && `, ${e.location}`}</p>
+              <p className="text-[11px] text-slate-500 ">{e.company}{e.location && `, ${e.location}`}</p>
               {(e.summary || e.responsibilities?.filter(Boolean).length > 0) && (
                 <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: e.summary?.includes('<') ? normalizeToHtml(e.summary) : normalizeToHtml(e.summary) + normalizeToHtml(e.responsibilities) }} />
               )}
@@ -1718,8 +1754,9 @@ function ResumeMinimal({ data, pageSettings }) {
       {skillGroups.length > 0 && (
         <Section title="Skills" style={sectionOrderStyle(data, "skills")}>
           {skillGroups.map((g) => (
-            <p key={g.id} className="text-[10.5px] mb-1 text-slate-600 break-inside-avoid">
-              <span className="text-slate-800">{g.name}</span> \u2014 {g.skills.join(", ")}
+            <p key={g.id} className="text-[10.5px] mb-1 text-slate-600 ">
+              <span className="text-slate-800 font-medium">{g.name}: </span>
+              {g.skills.join(", ")}
             </p>
           ))}
         </Section>
@@ -1728,12 +1765,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {projects.length > 0 && (
         <Section title="Projects" style={sectionOrderStyle(data, "projects")}>
           {projects.map((pr) => (
-            <div key={pr.id} className="mb-3 last:mb-0 break-inside-avoid">
-              <p className="text-[11.5px] font-medium text-slate-900">{pr.name}</p>
+            <div key={pr.id} className="mb-3 last:mb-0">
+              <p className="text-[11.5px] font-medium text-slate-900 ">{pr.name}</p>
               {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
                 <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
               )}
-              {pr.tools && <p className="text-[10px] mt-0.5 text-slate-400">{pr.tools}</p>}
+              {pr.tools && <p className="text-[10px] mt-0.5 text-slate-400 ">{pr.tools}</p>}
             </div>
           ))}
         </Section>
@@ -1742,13 +1779,13 @@ function ResumeMinimal({ data, pageSettings }) {
       {education.length > 0 && (
         <Section title="Education" style={sectionOrderStyle(data, "education")}>
           {education.map((ed) => (
-            <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
+            <div key={ed.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
                 <div>
-                  <p className="text-[11px] font-medium text-slate-900">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
-                  <p className="text-[10.5px] text-slate-500">{ed.institution}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
+                  <p className="text-[11px] font-medium text-slate-900 ">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
+                  <p className="text-[10.5px] text-slate-500 ">{ed.institution}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
                 </div>
-                <span className="text-[10px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}</span>
               </div>
               {ed.description && (
                 <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(ed.description) }} />
@@ -1761,7 +1798,7 @@ function ResumeMinimal({ data, pageSettings }) {
       {certifications.length > 0 && (
         <Section title="Certifications" style={sectionOrderStyle(data, "certifications")}>
           {certifications.map((c) => (
-            <p key={c.id} className="text-[10.5px] mb-0.5 text-slate-600 break-inside-avoid">
+            <p key={c.id} className="text-[10.5px] mb-0.5 text-slate-600 ">
               {c.name}{c.organization && ` \u2014 ${c.organization}`}{c.issueDate && `, ${c.issueDate}`}
             </p>
           ))}
@@ -1770,8 +1807,8 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.Languages?.length > 0 && (
         <Section title="Languages" style={sectionOrderStyle(data, "Languages")}>
           {data.Languages.map((l) => (
-            <div key={l.id} className="mb-0.5 last:mb-0 break-inside-avoid">
-              <p className="text-[10.5px] text-slate-800">{l.name} <span className="text-slate-500 font-normal">{l.proficiency && `\u2014 ${l.proficiency}`}</span></p>
+            <div key={l.id} className="mb-0.5 last:mb-0">
+              <p className="text-[10.5px] text-slate-800 ">{l.name} <span className="text-slate-500 font-normal">{l.proficiency && `\u2014 ${l.proficiency}`}</span></p>
             </div>
           ))}
         </Section>
@@ -1779,12 +1816,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.achievements?.length > 0 && (
         <Section title="Achievements" style={sectionOrderStyle(data, "achievements")}>
           {data.achievements.map((a) => (
-            <div key={a.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[11px] font-medium text-slate-900">{a.title}</span>
-                <span className="text-[10px] text-slate-400">{a.date}</span>
+            <div key={a.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[11px] font-medium text-slate-900 ">{a.title}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{a.date}</span>
               </div>
-              {a.organization && <p className="text-[10.5px] text-slate-500">{a.organization}</p>}
+              {a.organization && <p className="text-[10.5px] text-slate-500 ">{a.organization}</p>}
               {a.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(a.description) }} />}
             </div>
           ))}
@@ -1794,7 +1831,7 @@ function ResumeMinimal({ data, pageSettings }) {
         <Section title="Links" style={sectionOrderStyle(data, "links")}>
           <div className="flex flex-wrap gap-x-4">
             {data.links.map((l) => (
-              <div key={l.id} className="text-[10.5px] font-normal text-slate-600">
+              <div key={l.id} className="text-[10.5px] font-normal text-slate-600 ">
                 <span className="font-medium">{l.platform}</span>:{" "}
                 <a href={l.url.match(/^https?:\/\//) ? l.url : `https://${l.url}`} className="hover:text-slate-900 hover:underline" target="_blank" rel="noreferrer">
                   {l.url}
@@ -1807,12 +1844,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.internships?.length > 0 && (
         <Section title="Internships" style={sectionOrderStyle(data, "internships")}>
           {data.internships.map((e) => (
-            <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[12px] font-medium text-slate-900">{e.jobTitle}</span>
-                <span className="text-[10px] text-slate-400">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+            <div key={e.id} className="mb-3 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[12px] font-medium text-slate-900 ">{e.jobTitle}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
               </div>
-              <p className="text-[11px] text-slate-500">{e.company}{e.location && `, ${e.location}`}</p>
+              <p className="text-[11px] text-slate-500 ">{e.company}{e.location && `, ${e.location}`}</p>
               {e.summary && <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.summary) }} />}
             </div>
           ))}
@@ -1821,12 +1858,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.courses?.length > 0 && (
         <Section title="Courses" style={sectionOrderStyle(data, "courses")}>
           {data.courses.map((c) => (
-            <div key={c.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[11px] font-medium text-slate-900">{c.name}</span>
-                <span className="text-[10px] text-slate-400">{c.date}</span>
+            <div key={c.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[11px] font-medium text-slate-900 ">{c.name}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{c.date}</span>
               </div>
-              {(c.provider || c.url) && <p className="text-[10.5px] text-slate-500">{c.provider}{c.url && ` \u00b7 ${c.url}`}</p>}
+              {(c.provider || c.url) && <p className="text-[10.5px] text-slate-500 ">{c.provider}{c.url && ` \u00b7 ${c.url}`}</p>}
               {c.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(c.description) }} />}
             </div>
           ))}
@@ -1835,12 +1872,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.volunteering?.length > 0 && (
         <Section title="Volunteering" style={sectionOrderStyle(data, "volunteering")}>
           {data.volunteering.map((e) => (
-            <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[11.5px] font-medium text-slate-900">{e.role}</span>
-                <span className="text-[10px] text-slate-400">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
+            <div key={e.id} className="mb-3 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[11.5px] font-medium text-slate-900 ">{e.role}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
               </div>
-              <div className="text-[10.5px] text-slate-500">{e.organization}</div>
+              <div className="text-[10.5px] text-slate-500 ">{e.organization}</div>
               {e.description && <div className="text-[10.5px] mt-1 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(e.description) }} />}
             </div>
           ))}
@@ -1849,12 +1886,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.publications?.length > 0 && (
         <Section title="Publications" style={sectionOrderStyle(data, "publications")}>
           {data.publications.map((p) => (
-            <div key={p.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[11px] font-medium text-slate-900">{p.title}</span>
-                <span className="text-[10px] text-slate-400">{p.date}</span>
+            <div key={p.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[11px] font-medium text-slate-900 ">{p.title}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{p.date}</span>
               </div>
-              {(p.publisher || p.url) && <p className="text-[10.5px] text-slate-500">{p.publisher}{p.url && ` \u00b7 ${p.url}`}</p>}
+              {(p.publisher || p.url) && <p className="text-[10.5px] text-slate-500 ">{p.publisher}{p.url && ` \u00b7 ${p.url}`}</p>}
               {p.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(p.description) }} />}
             </div>
           ))}
@@ -1862,7 +1899,7 @@ function ResumeMinimal({ data, pageSettings }) {
       )}
       {data.interests?.length > 0 && (
         <Section title="Interests" style={sectionOrderStyle(data, "interests")}>
-          <p className="text-[10.5px] text-slate-600 mb-0.5 break-inside-avoid">
+          <p className="text-[10.5px] text-slate-600 mb-0.5 ">
             {data.interests.map(i => i.name).filter(Boolean).join(" \u2022 ")}
           </p>
         </Section>
@@ -1870,12 +1907,12 @@ function ResumeMinimal({ data, pageSettings }) {
       {data.customSection?.items?.length > 0 && (
         <Section title={data.customSection.sectionTitle || "Custom Section"} style={sectionOrderStyle(data, "customSection")}>
           {data.customSection.items.map((i) => (
-            <div key={i.id} className="mb-2 last:mb-0 break-inside-avoid">
-              <div className="flex justify-between items-baseline">
-                <span className="text-[11px] font-medium text-slate-900">{i.entryTitle}</span>
-                <span className="text-[10px] text-slate-400">{i.date}</span>
+            <div key={i.id} className="mb-2 last:mb-0">
+              <div className="flex justify-between items-baseline break-after-avoid">
+                <span className="text-[11px] font-medium text-slate-900 ">{i.entryTitle}</span>
+                <span className="text-[10px] text-slate-400 shrink-0 ml-2">{i.date}</span>
               </div>
-              {i.url && <p className="text-[10.5px] text-slate-500">{i.url}</p>}
+              {i.url && <p className="text-[10.5px] text-slate-500 ">{i.url}</p>}
               {i.description && <div className="text-[10.5px] mt-0.5 text-slate-600 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: normalizeToHtml(i.description) }} />}
             </div>
           ))}
@@ -1890,7 +1927,7 @@ function ResumeMinimal({ data, pageSettings }) {
   function Section({ title, children, style }) {
     return (
       <div className="mb-4 pt-3 border-t border-slate-100 first:border-t-0 first:pt-0" style={style}>
-        <h2 className="text-[10px] font-medium uppercase tracking-[0.15em] mb-2 text-slate-400">{title}</h2>
+        <h2 className="text-[10px] font-medium uppercase tracking-[0.15em] mb-2 text-slate-400 break-after-avoid">{title}</h2>
         {children}
       </div>
     );
@@ -1901,19 +1938,23 @@ function ResumeProfessional({ data, pageSettings }) {
   const { personal: p, summary, experience, skillGroups, projects, education, certifications } = data;
   return (
     <div id="resume-print-page" className="bg-white text-slate-800 flex" style={pageStyle(pageSettings)}>
-      <aside style={{ width: "68mm", padding: "16mm 8mm 16mm 14mm" }} className="bg-slate-50">
-        <h1 className="text-[18px] font-bold leading-tight text-slate-900">{p.fullName}</h1>
-        {p.title && <p className="text-[11px] mt-1 text-slate-600">{p.title}</p>}
+      <aside style={{ width: "68mm", padding: "16mm 8mm 16mm 14mm" }} className="bg-slate-50 shrink-0">
+        <div className="w-full min-w-0 mb-4">
+          <h1 className="text-[18px] font-bold leading-tight text-slate-900 ">{p.fullName}</h1>
+          {p.title && <p className="text-[11px] mt-1 text-slate-600 ">{p.title}</p>}
+        </div>
 
-        <ContactStack p={p} className="mt-4 space-y-1.5" />
+        <ContactStack p={p} className="space-y-1.5 min-w-0 w-full" />
 
         {skillGroups.length > 0 && (
           <div className="hidden mt-5">
-            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Skills</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2 break-after-avoid">Skills</h2>
             {skillGroups.map((g) => (
-              <div key={g.id} className="mb-2.5 break-inside-avoid">
-                <p className="text-[10px] font-semibold text-slate-800">{g.name}</p>
-                <p className="text-[9.5px] text-slate-600 leading-snug mt-0.5">{g.skills.join(", ")}</p>
+              <div key={g.id} className="mb-2.5">
+                <p className="text-[9.5px] text-slate-600 leading-snug mt-0.5 ">
+                  <span className="text-[10px] font-semibold text-slate-800 ">{g.name}: </span>
+                  {g.skills.join(", ")}
+                </p>
               </div>
             ))}
           </div>
@@ -1921,9 +1962,9 @@ function ResumeProfessional({ data, pageSettings }) {
 
         {education.length > 0 && (
           <div className="hidden mt-5">
-            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Education</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2 break-after-avoid">Education</h2>
             {education.map((ed) => (
-              <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
+              <div key={ed.id} className="mb-2 last:mb-0">
                 <p className="text-[10px] font-semibold text-slate-800">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                 <p className="text-[9.5px] text-slate-600">{ed.institution}</p>
                 <p className="text-[9px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
@@ -1934,9 +1975,9 @@ function ResumeProfessional({ data, pageSettings }) {
 
         {certifications.length > 0 && (
           <div className="hidden mt-5">
-            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Certifications</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2 break-after-avoid">Certifications</h2>
             {certifications.map((c) => (
-              <div key={c.id} className="mb-1.5 last:mb-0 break-inside-avoid">
+              <div key={c.id} className="mb-1.5 last:mb-0">
                 <p className="text-[9.5px] font-semibold text-slate-800">{c.name}</p>
                 <p className="text-[9px] text-slate-500">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
               </div>
@@ -1955,8 +1996,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {experience.length > 0 && (
           <Section title="Experience" style={sectionOrderStyle(data, "experience")}>
             {experience.map((e) => (
-              <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={e.id} className="mb-3 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[12px] font-semibold text-slate-900">{e.jobTitle}</span>
                   <span className="text-[10px] text-slate-500">{e.startDate}{(e.startDate || e.endDate || e.current) && " \u2013 "}{e.current ? "Present" : e.endDate}</span>
                 </div>
@@ -1972,7 +2013,7 @@ function ResumeProfessional({ data, pageSettings }) {
         {projects.length > 0 && (
           <Section title="Projects" style={sectionOrderStyle(data, "projects")}>
             {projects.map((pr) => (
-              <div key={pr.id} className="mb-2.5 last:mb-0 break-inside-avoid">
+              <div key={pr.id} className="mb-2.5 last:mb-0">
                 <p className="text-[11.5px] font-semibold text-slate-900">{pr.name}</p>
                 {(pr.description || pr.highlights?.filter(Boolean).length > 0) && (
                   <div className="text-[10.5px] mt-0.5 text-slate-700 leading-snug resume-richtext" dangerouslySetInnerHTML={{ __html: pr.description?.includes('<') ? normalizeToHtml(pr.description) : normalizeToHtml(pr.description) + normalizeToHtml(pr.highlights) }} />
@@ -1986,7 +2027,7 @@ function ResumeProfessional({ data, pageSettings }) {
         {skillGroups.length > 0 && (
           <Section title="Skills" style={sectionOrderStyle(data, "skills")}>
             {skillGroups.map((g) => (
-              <div key={g.id} className="mb-2.5 break-inside-avoid">
+              <div key={g.id} className="mb-2.5">
                 <p className="text-[10px] font-semibold text-slate-800">{g.name}</p>
                 <p className="text-[9.5px] text-slate-600 leading-snug mt-0.5">{g.skills.join(", ")}</p>
               </div>
@@ -1997,7 +2038,7 @@ function ResumeProfessional({ data, pageSettings }) {
         {education.length > 0 && (
           <Section title="Education" style={sectionOrderStyle(data, "education")}>
             {education.map((ed) => (
-              <div key={ed.id} className="mb-2 last:mb-0 break-inside-avoid">
+              <div key={ed.id} className="mb-2 last:mb-0">
                 <p className="text-[10px] font-semibold text-slate-800">{[ed.degree, ed.fieldOfStudy].filter(Boolean).join(" in ")}</p>
                 <p className="text-[9.5px] text-slate-600">{ed.institution}</p>
                 <p className="text-[9px] text-slate-400">{ed.startDate}{(ed.startDate || ed.endDate) && " \u2013 "}{ed.endDate}{ed.grade && ` \u00b7 ${ed.grade}`}</p>
@@ -2012,7 +2053,7 @@ function ResumeProfessional({ data, pageSettings }) {
         {certifications.length > 0 && (
           <Section title="Certifications" style={sectionOrderStyle(data, "certifications")}>
             {certifications.map((c) => (
-              <div key={c.id} className="mb-1.5 last:mb-0 break-inside-avoid">
+              <div key={c.id} className="mb-1.5 last:mb-0">
                 <p className="text-[9.5px] font-semibold text-slate-800">{c.name}</p>
                 <p className="text-[9px] text-slate-500">{c.organization} {c.issueDate && `\u00b7 ${c.issueDate}`}</p>
               </div>
@@ -2022,7 +2063,7 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.Languages?.length > 0 && (
           <Section title="Languages" style={sectionOrderStyle(data, "Languages")}>
             {data.Languages.map((l) => (
-              <div key={l.id} className="mb-0.5 last:mb-0 break-inside-avoid">
+              <div key={l.id} className="mb-0.5 last:mb-0">
                 <p className="text-[10px] text-slate-800 font-semibold">{l.name} <span className="text-slate-500 font-normal">{l.proficiency && `\u2014 ${l.proficiency}`}</span></p>
               </div>
             ))}
@@ -2031,8 +2072,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.achievements?.length > 0 && (
           <Section title="Achievements" style={sectionOrderStyle(data, "achievements")}>
             {data.achievements.map((a) => (
-              <div key={a.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={a.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[11px] font-semibold text-slate-900">{a.title}</span>
                   <span className="text-[10px] text-slate-500">{a.date}</span>
                 </div>
@@ -2059,8 +2100,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.internships?.length > 0 && (
           <Section title="Internships" style={sectionOrderStyle(data, "internships")}>
             {data.internships.map((e) => (
-              <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={e.id} className="mb-3 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[12px] font-semibold text-slate-900">{e.jobTitle}</span>
                   <span className="text-[10px] text-slate-500">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
                 </div>
@@ -2073,8 +2114,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.courses?.length > 0 && (
           <Section title="Courses" style={sectionOrderStyle(data, "courses")}>
             {data.courses.map((c) => (
-              <div key={c.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={c.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[11px] font-semibold text-slate-900">{c.name}</span>
                   <span className="text-[10px] text-slate-500">{c.date}</span>
                 </div>
@@ -2087,8 +2128,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.volunteering?.length > 0 && (
           <Section title="Volunteering" style={sectionOrderStyle(data, "volunteering")}>
             {data.volunteering.map((e) => (
-              <div key={e.id} className="mb-3 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={e.id} className="mb-3 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[11.5px] font-semibold text-slate-900">{e.role}</span>
                   <span className="text-[10px] text-slate-500">{e.startDate}{(e.startDate || e.endDate) && " \u2013 "}{e.endDate}</span>
                 </div>
@@ -2101,8 +2142,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.publications?.length > 0 && (
           <Section title="Publications" style={sectionOrderStyle(data, "publications")}>
             {data.publications.map((p) => (
-              <div key={p.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={p.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[11px] font-semibold text-slate-900">{p.title}</span>
                   <span className="text-[10px] text-slate-500">{p.date}</span>
                 </div>
@@ -2114,7 +2155,7 @@ function ResumeProfessional({ data, pageSettings }) {
         )}
         {data.interests?.length > 0 && (
           <Section title="Interests" style={sectionOrderStyle(data, "interests")}>
-            <p className="text-[10px] text-slate-800 font-semibold mb-0.5 break-inside-avoid">
+            <p className="text-[10px] text-slate-800 font-semibold mb-0.5">
               {data.interests.map(i => i.name).filter(Boolean).join(" \u2022 ")}
             </p>
           </Section>
@@ -2122,8 +2163,8 @@ function ResumeProfessional({ data, pageSettings }) {
         {data.customSection?.items?.length > 0 && (
           <Section title={data.customSection.sectionTitle || "Custom Section"} style={sectionOrderStyle(data, "customSection")}>
             {data.customSection.items.map((i) => (
-              <div key={i.id} className="mb-2 last:mb-0 break-inside-avoid">
-                <div className="flex justify-between items-baseline">
+              <div key={i.id} className="mb-2 last:mb-0">
+                <div className="flex justify-between items-baseline break-after-avoid">
                   <span className="text-[11px] font-semibold text-slate-900">{i.entryTitle}</span>
                   <span className="text-[10px] text-slate-500">{i.date}</span>
                 </div>
@@ -2143,7 +2184,7 @@ function ResumeProfessional({ data, pageSettings }) {
   function Section({ title, children }) {
     return (
       <div className="mb-4">
-        <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-800 border-b border-slate-300 pb-1 mb-2">{title}</h2>
+        <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-800 border-b border-slate-300 pb-1 mb-2 break-after-avoid">{title}</h2>
         {children}
       </div>
     );
@@ -2155,10 +2196,20 @@ const TEMPLATE_COMPONENTS = {
   modern: ResumeModern,
   minimal: ResumeMinimal,
   professional: ResumeProfessional,
+  ats_pro: ResumeATSPro,
+  modern_pro: ResumeModernPro,
+  executive: ResumeExecutive,
+  corporate: ResumeCorporate,
+  tech: ResumeTech,
+  consulting: ResumeConsulting,
+  pm: ResumePM,
+  compact: ResumeCompact,
+  two_column: ResumeTwoColumn,
+  academic: ResumeAcademic,
 };
 
 /* ---------------------------------------------------------------------- */
-/* Templates panel                                                         */
+/* Templates panel */
 /* ---------------------------------------------------------------------- */
 
 function TemplatesPanel({ current, onSelect, onClose }) {
@@ -2280,28 +2331,30 @@ function PageSizeControls({ settings, onChange }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Preview panel                                                           */
+/* Preview panel */
 /* ---------------------------------------------------------------------- */
 
-function PrintStyles() {
+function PrintStyles({ pageSettings = {} }) {
+  const format = pageSettings.format === "a4" ? "A4" : pageSettings.format === "a5" ? "A5" : pageSettings.format === "letter" ? "letter" : "auto";
+  const orientation = pageSettings.orientation === "landscape" ? "landscape" : "portrait";
   return (
     <style>{`
-      @media print {
-        @page { margin: 16mm 18mm; }
-        #resume-print-page { padding: 0 !important; width: 100% !important; min-height: auto !important; }
-      }
-      .resume-richtext ul { list-style-type: disc; padding-left: 1.5em; margin-top: 0.25em; margin-bottom: 0.25em; }
-      .resume-richtext ol { list-style-type: decimal; padding-left: 1.5em; margin-top: 0.25em; margin-bottom: 0.25em; }
-      .resume-richtext p { margin-top: 0.25em; margin-bottom: 0.25em; white-space: pre-wrap; }
-      .resume-richtext h1 { font-size: 1.25em; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; white-space: pre-wrap; }
-      .resume-richtext h2 { font-size: 1.1em; font-weight: bold; margin-top: 0.4rem; margin-bottom: 0.2rem; white-space: pre-wrap; }
-      .resume-richtext li > p { margin: 0; display: inline; }
-      .resume-richtext a { text-decoration: underline; color: inherit; }
-      .resume-richtext blockquote { border-left: 2px solid currentColor; padding-left: 0.75em; opacity: 0.8; font-style: italic; margin-top: 0.5em; margin-bottom: 0.5em; }
-      .resume-richtext hr { border: none; border-top: 1px solid currentColor; opacity: 0.3; margin: 0.8em 0; }
-      .resume-richtext > *:first-child { margin-top: 0; }
-      .resume-richtext > *:last-child { margin-bottom: 0; }
-    `}</style>
+ @media print {
+ @page { size: ${format} ${orientation}; margin: 0; }
+ #resume-print-page { width: 100% !important; min-height: auto !important; }
+ }
+ .resume-richtext ul { list-style-type: disc; padding-left: 1.5em; margin-top: 0.25em; margin-bottom: 0.25em; }
+ .resume-richtext ol { list-style-type: decimal; padding-left: 1.5em; margin-top: 0.25em; margin-bottom: 0.25em; }
+ .resume-richtext p { margin-top: 0.25em; margin-bottom: 0.25em; white-space: pre-wrap; }
+ .resume-richtext h1 { font-size: 1.25em; font-weight: bold; margin-top: 0.5rem; margin-bottom: 0.25rem; white-space: pre-wrap; }
+ .resume-richtext h2 { font-size: 1.1em; font-weight: bold; margin-top: 0.4rem; margin-bottom: 0.2rem; white-space: pre-wrap; }
+ .resume-richtext li > p { margin: 0; display: inline; }
+ .resume-richtext a { text-decoration: underline; color: inherit; }
+ .resume-richtext blockquote { border-left: 2px solid currentColor; padding-left: 0.75em; opacity: 0.8; font-style: italic; margin-top: 0.5em; margin-bottom: 0.5em; }
+ .resume-richtext hr { border: none; border-top: 1px solid currentColor; opacity: 0.3; margin: 0.8em 0; }
+ .resume-richtext > *:first-child { margin-top: 0; }
+ .resume-richtext > *:last-child { margin-bottom: 0; }
+ `}</style>
   );
 }
 
@@ -2352,7 +2405,7 @@ function PreviewPanel({ data, template, onPageSettingsChange }) {
             style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: `${dimensions.width}mm` }}
             className="resume-screen-scale shadow-md"
           >
-            <PrintStyles />
+            <PrintStyles pageSettings={data.pageSettings} />
             <TemplateComp data={data} pageSettings={data.pageSettings} />
           </div>
         </div>
@@ -2362,7 +2415,7 @@ function PreviewPanel({ data, template, onPageSettingsChange }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Main App                                                                */
+/* Main App */
 /* ---------------------------------------------------------------------- */
 
 const SECTIONS = [
@@ -2531,52 +2584,52 @@ export default function App() {
   return (
     <div className="resume-app-shell h-screen flex flex-col bg-slate-50" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
       <style>{`
-        @media print {
-          html, body { margin: 0 !important; padding: 0 !important; }
-          body * { visibility: hidden !important; }
-          .resume-app-shell { display: block !important; height: auto !important; min-height: 0 !important; }
-          .resume-app-shell > header,
-          .resume-app-shell > button,
-          .resume-editor-pane,
-          .resume-preview-toolbar { display: none !important; }
-          .resume-workspace,
-          .resume-preview-pane { display: block !important; width: auto !important; height: auto !important; min-height: 0 !important; }
-          .resume-preview-scroll { display: block !important; width: auto !important; height: auto !important; min-height: 0 !important; padding: 0 !important; overflow: visible !important; background: transparent !important; }
-          .resume-preview-layout, .resume-preview-layout * { visibility: visible !important; }
-          .resume-preview-layout {
-            position: static !important;
-            display: block !important;
-            width: auto !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-          .resume-screen-scale {
-            position: static !important;
-            display: block !important;
-            width: auto !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: visible !important;
-            transform: none !important;
-            box-shadow: none !important;
-          }
-          #resume-print-page {
-            position: relative !important;
-            top: auto !important;
-            left: auto !important;
-            width: ${pageDimensions(data.pageSettings).width}mm !important;
-            min-height: ${pageDimensions(data.pageSettings).height}mm !important;
-            height: auto !important;
-            margin: 0 !important;
-            transform: none !important;
-            box-shadow: none !important;
-          }
-          @page { size: ${pageDimensions(data.pageSettings).width}mm ${pageDimensions(data.pageSettings).height}mm; margin: 0; }
-        }
-      `}</style>
+ @media print {
+ html, body { margin: 0 !important; padding: 0 !important; }
+ body * { visibility: hidden !important; }
+ .resume-app-shell { display: block !important; height: auto !important; min-height: 0 !important; }
+ .resume-app-shell > header,
+ .resume-app-shell > button,
+ .resume-editor-pane,
+ .resume-preview-toolbar { display: none !important; }
+ .resume-workspace,
+ .resume-preview-pane { display: block !important; width: auto !important; height: auto !important; min-height: 0 !important; }
+ .resume-preview-scroll { display: block !important; width: auto !important; height: auto !important; min-height: 0 !important; padding: 0 !important; overflow: visible !important; background: transparent !important; }
+ .resume-preview-layout, .resume-preview-layout * { visibility: visible !important; }
+ .resume-preview-layout {
+ position: static !important;
+ display: block !important;
+ width: auto !important;
+ height: auto !important;
+ margin: 0 !important;
+ padding: 0 !important;
+ overflow: visible !important;
+ }
+ .resume-screen-scale {
+ position: static !important;
+ display: block !important;
+ width: auto !important;
+ height: auto !important;
+ margin: 0 !important;
+ padding: 0 !important;
+ overflow: visible !important;
+ transform: none !important;
+ box-shadow: none !important;
+ }
+ #resume-print-page {
+ position: relative !important;
+ top: auto !important;
+ left: auto !important;
+ width: ${pageDimensions(data.pageSettings).width}mm !important;
+ min-height: ${pageDimensions(data.pageSettings).height}mm !important;
+ height: auto !important;
+ margin: 0 !important;
+ transform: none !important;
+ box-shadow: none !important;
+ }
+ @page { size: ${pageDimensions(data.pageSettings).width}mm ${pageDimensions(data.pageSettings).height}mm; margin: 0; }
+ }
+ `}</style>
 
       <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-white shrink-0">
         <div className="flex items-center gap-2">
