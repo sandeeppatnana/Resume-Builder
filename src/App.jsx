@@ -2894,7 +2894,7 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
             Discard Extraction
           </button>
           <button
-            onClick={() => onApply(data)}
+            onClick={() => onApply({ ...data, importMetadata: { ...(data.importMetadata || {}), ocrText: formattedOcrText } })}
             className="w-full py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 shadow flex items-center justify-center gap-2 transition-transform transform hover:-translate-y-0.5 focus:ring-4 focus:ring-teal-500/40"
           >
             Apply to Editor Workspace <ArrowRight size={18} />
@@ -2905,7 +2905,54 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
   );
 }
 
+function OcrTextModal({ ocrText, onClose }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(ocrText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 bg-slate-50 shrink-0">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900">OCR Text</h2>
+            <p className="text-sm font-medium text-slate-500 mt-1">Extracted text from your imported resume</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto bg-slate-100/50">
+          <div className="flex justify-between items-center bg-white p-3 rounded-t-xl border border-slate-200 shadow-sm border-b-0">
+            <span className="font-bold text-slate-500 text-sm">{(ocrText || "").length} characters</span>
+            <button onClick={handleCopy} className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors text-sm ${copied ? 'bg-green-100 text-green-700' : 'bg-slate-700 text-white hover:bg-slate-800 shadow-sm'}`}>
+              {copied ? <><Check size={16} /> Copied!</> : <><Search size={16} /> Copy All Text</>}
+            </button>
+          </div>
+          <textarea
+            readOnly
+            className="w-full font-mono text-sm text-slate-700 bg-white p-4 sm:p-6 border border-slate-200 rounded-b-xl focus:outline-none focus:ring-0 leading-relaxed whitespace-pre-wrap shadow-sm resize-none"
+            style={{ minHeight: "50vh" }}
+            value={ocrText}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [showOcrTextModal, setShowOcrTextModal] = useState(false);
   const [appScreen, setAppScreenState] = useState(() => {
     try {
       const stored = window.localStorage.getItem('appScreen_v1');
@@ -3106,6 +3153,7 @@ export default function App() {
       >
         <Plus size={14} /> Add Custom Field
       </button>
+
       <div className="h-4" />
     </div>
   );
@@ -3253,6 +3301,14 @@ export default function App() {
             {saveStatus === "Saved" && <Check size={12} className="text-teal-600" />}
             {saveStatus}
           </span>
+          {data?.importMetadata?.ocrText && (
+            <button
+              onClick={() => setShowOcrTextModal(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-md px-3 py-1.5 hover:bg-slate-50 transition-colors"
+            >
+              <FileText size={13} /> View OCR Text
+            </button>
+          )}
           <button
             onClick={() => setShowATSChecker(true)}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-md px-3 py-1.5 hover:bg-slate-50"
@@ -3338,6 +3394,13 @@ export default function App() {
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 150);
           }}
+        />
+      )}
+
+      {showOcrTextModal && (
+        <OcrTextModal
+          ocrText={data.importMetadata.ocrText}
+          onClose={() => setShowOcrTextModal(false)}
         />
       )}
     </div>
