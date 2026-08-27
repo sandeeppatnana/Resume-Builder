@@ -2689,8 +2689,33 @@ function ParseScreen({ file, onCancel, onComplete }) {
 }
 
 function ReviewImportScreen({ data: payload, onApply, onCancel }) {
-  const data = payload?.parsedData || payload;
+  const [data, setData] = useState(payload?.parsedData || payload || {});
   const confidence = payload?.confidence || {};
+
+  const handlePersonalChange = (key, value) => {
+    setData(prev => ({
+      ...prev,
+      personal: { ...prev.personal, [key]: value }
+    }));
+  };
+
+  const handlePhoneChange = (value) => {
+    setData(prev => ({
+      ...prev,
+      personal: { ...prev.personal, phone: { ...prev.personal.phone, number: value } }
+    }));
+  };
+
+  const handleSummaryChange = (e) => {
+    setData(prev => ({ ...prev, summary: e.target.value }));
+  };
+
+  const removeUnmapped = (id) => {
+    setData(prev => ({
+      ...prev,
+      customFields: (prev.customFields || []).filter(c => c.id !== id)
+    }));
+  };
 
   const lowCount = [
     confidence?.personal?.fullName,
@@ -2702,59 +2727,102 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center py-12 transition-all overflow-y-auto">
-      <div className="max-w-3xl w-full">
-        <div className="text-center mb-10">
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-8">
           <div className="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-teal-200">
             <Check size={32} />
           </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Success! Review Extract</h1>
-          <p className="text-slate-500 mt-3 max-w-lg mx-auto font-medium">We broke down your document completely offline. Please review the high-level metrics before importing onto your active work canvas.</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Review Extract</h1>
+          <p className="text-slate-500 mt-3 max-w-xl mx-auto font-medium">Verify the mapped extracted fields below. You can correct any mappings manually before applying them to your workspace.</p>
           {lowCount > 0 && <span className="inline-block mt-4 px-4 py-1.5 bg-amber-100 text-amber-700 font-bold text-sm rounded-full border border-amber-200 shadow-sm animate-pulse">{lowCount} field(s) flagged for low offline confidence</span>}
         </div>
 
-        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-8 animate-in slide-in-from-bottom-4 duration-500">
-          <h3 className="font-bold text-lg text-slate-800 mb-4 pb-2 border-b">Heuristic Mapping Results</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className={`p-4 rounded-xl border ${confidence?.personal?.fullName !== 'high' ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors relative overflow-hidden`}>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-                Candidate
-                {confidence?.personal?.fullName !== 'high' && <AlertCircle size={14} className="text-amber-500" />}
-              </span>
-              <span className="text-lg font-bold text-slate-800 truncate">{data?.personal?.fullName || "Not Found"}</span>
-            </div>
-            <div className={`p-4 rounded-xl border ${confidence?.personal?.email !== 'high' && confidence?.personal?.phone !== 'high' ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors relative overflow-hidden`}>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-                Contact Object
-                {(confidence?.personal?.email !== 'high' && confidence?.personal?.phone !== 'high') && <AlertCircle size={14} className="text-amber-500" />}
-              </span>
-              <span className="text-lg font-bold text-slate-800 truncate">{data?.personal?.email || data?.personal?.phone || "Not Found"}</span>
-            </div>
-            <div className={`p-4 rounded-xl border ${(confidence?.experience || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped')) ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors`}>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-                Experience Nodes
-                {((confidence?.experience || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped'))) && <AlertCircle size={14} className="text-amber-500" />}
-              </span>
-              <span className="text-lg font-bold text-slate-800 truncate">{data?.experience?.length || 0} Identifiers</span>
-            </div>
-            <div className={`p-4 rounded-xl border ${(confidence?.education || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped')) ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 hover:border-teal-500'} flex flex-col group transition-colors`}>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-                Education Maps
-                {((confidence?.education || []).some(x => Object.values(x).includes('low') || Object.values(x).includes('unmapped'))) && <AlertCircle size={14} className="text-amber-500" />}
-              </span>
-              <span className="text-lg font-bold text-slate-800 truncate">{data?.education?.length || 0} Degrees</span>
-            </div>
-          </div>
+        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-8">
 
-          {data?.customFields?.length > 0 && (
-            <div className="mt-6 p-4 rounded-xl border border-teal-300 bg-teal-50">
-              <h4 className="font-bold text-teal-900 text-sm mb-2 flex items-center gap-2">
-                <Check size={16} /> Unmapped Content Recovered safely!
-              </h4>
-              <p className="text-sm font-medium text-teal-800 leading-relaxed">
-                The specific engine boundary failed to map <strong>{data.customFields[0].description.split('\n').filter(Boolean).length} lines</strong> cleanly into Experience or Education structures. To preserve zero-loss data constraints, they have all been proactively dumped into a "Custom Section" at the bottom of your workspace.
-              </p>
+          <div className="space-y-6">
+            <h3 className="font-bold text-lg text-slate-800 pb-2 border-b">Personal Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
+                <input type="text" value={data?.personal?.fullName || ""} onChange={e => handlePersonalChange('fullName', e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Job Title</label>
+                <input type="text" value={data?.personal?.title || ""} onChange={e => handlePersonalChange('title', e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email</label>
+                <input type="email" value={data?.personal?.email || ""} onChange={e => handlePersonalChange('email', e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
+                <input type="text" value={data?.personal?.phone?.number || ""} onChange={e => handlePhoneChange(e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">LinkedIn URL</label>
+                <input type="text" value={data?.personal?.linkedin || ""} onChange={e => handlePersonalChange('linkedin', e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">GitHub URL</label>
+                <input type="text" value={data?.personal?.github || ""} onChange={e => handlePersonalChange('github', e.target.value)} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+              </div>
             </div>
-          )}
+
+            <h3 className="font-bold text-lg text-slate-800 pb-2 border-b mt-8">Summary</h3>
+            <textarea value={data?.summary || ""} onChange={handleSummaryChange} rows={4} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" />
+
+            <h3 className="font-bold text-lg text-slate-800 pb-2 border-b mt-8">Mapped Collections</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-slate-50 border rounded-xl flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-600">Experience</span>
+                <span className="text-sm font-black text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">{data?.experience?.length || 0}</span>
+              </div>
+              <div className="p-3 bg-slate-50 border rounded-xl flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-600">Education</span>
+                <span className="text-sm font-black text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">{data?.education?.length || 0}</span>
+              </div>
+              <div className="p-3 bg-slate-50 border rounded-xl flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-600">Projects</span>
+                <span className="text-sm font-black text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">{data?.projects?.length || 0}</span>
+              </div>
+              <div className="p-3 bg-slate-50 border rounded-xl flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-600">Skills</span>
+                <span className="text-sm font-black text-slate-900 bg-white px-2 py-0.5 rounded shadow-sm">
+                  {data?.skillGroups?.reduce((acc, g) => acc + (g.skills?.length || 0), 0) || 0}
+                </span>
+              </div>
+            </div>
+
+            {data?.customFields?.length > 0 && (
+              <div className="mt-8 p-5 rounded-xl border-2 border-amber-300 bg-amber-50 shadow-sm relative">
+                <h4 className="font-bold text-amber-900 text-sm mb-2 flex items-center gap-2">
+                  <AlertCircle size={18} /> Needs Review / Unmapped
+                </h4>
+                <p className="text-sm font-medium text-amber-800 leading-relaxed mb-4">
+                  The parser could not confidently place these blocks. They will be added to a Custom Section by default. You can delete them if irrelevant.
+                </p>
+                {data.customFields.map((cf) => (
+                  <div key={cf.id} className="relative group bg-white border border-amber-200 rounded-lg p-3">
+                    <textarea
+                      className="w-full text-sm text-slate-700 bg-transparent outline-none resize-y"
+                      rows={4}
+                      value={cf.description}
+                      onChange={(e) => {
+                        const newDescr = e.target.value;
+                        setData(prev => ({
+                          ...prev,
+                          customFields: prev.customFields.map(f => f.id === cf.id ? { ...f, description: newDescr } : f)
+                        }));
+                      }}
+                    />
+                    <button onClick={() => removeUnmapped(cf.id)} className="absolute top-2 right-2 p-1 bg-red-100/50 hover:bg-red-100 text-red-500 rounded transition-colors opacity-0 group-hover:opacity-100 z-10">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full">

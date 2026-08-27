@@ -58,22 +58,28 @@ async function extractRawText(file) {
 export async function parseResumeFile(file) {
     const rawText = await extractRawText(file);
     const data = JSON.parse(JSON.stringify(defaultData()));
-    const confidence = { personal: {}, experience: [], education: [], skills: 'low', projects: [], certifications: [] };
+    const confidence = { personal: {}, experience: [], education: [], skills: 'low', projects: 'low', certifications: 'low', languages: 'low', achievements: 'low' };
 
     if (!rawText || !rawText.trim()) throw new Error("Could not detect valid text inside the document (may be a scanned image).");
 
-    const rawLines = rawText.split('\n').map(l => l.replace(/\s{2,}/g, ' ').trim()).filter(l => l);
+    const rawLines = rawText.split('\n').map(l => l.replace(/\s{2,}/g, '  ').replace(/\s{2,}/g, ' ').trim()).filter(l => l);
     // De-duplication logic
     const lines = [...new Set(rawLines)];
     const text = lines.join('\n'); // Line separated for safer RegEx block testing
 
-    const nameLine = lines.slice(0, 5).find(l => /^[A-Z][A-Za-z.\-']+(\s[A-Z][A-Za-z.\-']+)+$/.test(l) && l.length < 35) || lines[0] || "";
-    data.personal.fullName = nameLine.length < 60 ? nameLine : "";
-    confidence.personal.fullName = (nameLine.length < 40 && nameLine.split(' ').length <= 4) ? 'high' : 'low';
+    const nameRegex = /^[A-Z][A-Za-z.\-']+(\s[A-Z][A-Za-z.\-']+)+$/;
+    const nameLine = lines.slice(0, 10).find(l => nameRegex.test(l) && l.length < 40 && l.length > 5);
+
+    if (nameLine) {
+        data.personal.fullName = nameLine;
+        confidence.personal.fullName = 'high';
+    } else {
+        confidence.personal.fullName = 'unmapped';
+    }
 
     // Extract Job Title isolated from the Name constraint
-    const titleLine = lines.slice(1, 6).find(l => /(Engineer|Developer|Manager|Designer|Analyst|Consultant|Architect|Specialist|Director|Lead|Scientist)/i.test(l) && l.length < 50);
-    if (titleLine) {
+    const titleLine = lines.slice(0, 10).find(l => /(Engineer|Developer|Manager|Designer|Analyst|Consultant|Architect|Specialist|Director|Lead|Scientist|Administrator)/i.test(l) && l.length < 60);
+    if (titleLine && titleLine !== data.personal.fullName) {
         data.personal.title = titleLine;
     }
 
@@ -90,8 +96,7 @@ export async function parseResumeFile(file) {
     const phoneMatch = text.match(phoneRegex);
     if (phoneMatch) {
         let code = phoneMatch[1] || "1";
-        let number = phoneMatch[0].replace(`+${phoneMatch[1]}`, "").trim();
-        data.personal.phone = phoneMatch[0].trim();
+        data.personal.phone.number = phoneMatch[0].trim();
         confidence.personal.phone = 'high';
     } else {
         confidence.personal.phone = 'unmapped';
@@ -100,14 +105,12 @@ export async function parseResumeFile(file) {
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|linkedin\.com\/[^\s]+|github\.com\/[^\s]+)/gi;
     const urlMatches = text.match(urlRegex) || [];
     if (urlMatches.length) {
-        data.personal.linkedin = urlMatches[0];
+        data.personal.linkedin = urlMatches.find(u => u.toLowerCase().includes('linkedin')) || urlMatches[0];
+        const githubMatch = urlMatches.find(u => u.toLowerCase().includes('github'));
+        if (githubMatch) data.personal.github = githubMatch;
         confidence.personal.linkedin = 'high';
     } else {
         confidence.personal.linkedin = 'unmapped';
-    }
-
-    if (urlMatches.length > 1) {
-        data.personal.website = urlMatches[1];
     }
 
     // Extended Section Aliasing
@@ -119,11 +122,8 @@ export async function parseResumeFile(file) {
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
 
-        // Fix mangled space spacing
-        line = line.replace(/\s{2,}/g, ' ');
-
-        const match = line.match(sectionHeaders);
-        if (match && match[0]) {
+        let match = line.trim().match(sectionHeaders);
+        if (match && line.length < 50) {
             let hdr = match[1].toUpperCase();
             if (['EMPLOYMENT', 'WORK HISTORY', 'PROFESSIONAL EXPERIENCE'].includes(hdr)) hdr = 'EXPERIENCE';
             if (['PROFILE'].includes(hdr)) hdr = 'SUMMARY';
@@ -135,7 +135,7 @@ export async function parseResumeFile(file) {
         }
 
         // Ignore top-level contact lines from being pushed randomly
-        if (i < 5 && (line === data.personal.fullName || emailRegex.test(line) || phoneRegex.test(line))) continue;
+        if (i < 8 && (line === data.personal.fullName || emailRegex.test(line) || phoneRegex.test(line))) continue;
 
         if (sections[currentSection]) {
             sections[currentSection].push(line);
@@ -155,14 +155,34 @@ export async function parseResumeFile(file) {
         const skillList = sections.SKILLS.join("\n").split(/[,•|·\n]+/).map(s => s.trim()).filter(s => s.length > 1);
         const uniqueSkills = [...new Set(skillList)];
 
-        // Target skillGroups architecture correctly matching UniversalTemplate expectations
-        data.skillGroups = [];
-        data.skillGroups.push({
+        data.skillGroups = [{
             id: crypto.randomUUID(),
             name: "Core Competencies",
             skills: uniqueSkills
-        });
+        }];
         confidence.skills = 'high';
+    }
+
+    // Add explicit fallback handlers for arrays to be loaded into text fields on App.jsx side
+    if (sections.PROJECTS && sections.PROJECTS.length) {
+        data.projects = [{ id: crypto.randomUUID(), name: "Imported Projects", description: sections.PROJECTS.join("\n"), url: "" }];
+        confidence.projects = 'low';
+    }
+
+    if (sections.CERTIFICATIONS && sections.CERTIFICATIONS.length) {
+        data.certifications = [{ id: crypto.randomUUID(), name: "Imported Certifications", issuer: "", date: "", url: "", description: sections.CERTIFICATIONS.join("\n") }];
+        confidence.certifications = 'low';
+    }
+
+    if (sections.LANGUAGES && sections.LANGUAGES.length) {
+        const langList = sections.LANGUAGES.join(",").split(/[,•|·\n]+/).map(s => s.trim()).filter(s => s.length > 1);
+        data.Languages = langList.map(l => ({ id: crypto.randomUUID(), language: l, proficiency: "" }));
+        confidence.languages = 'high';
+    }
+
+    if (sections.ACHIEVEMENTS && sections.ACHIEVEMENTS.length) {
+        data.achievements = [{ id: crypto.randomUUID(), title: "Imported Achievements", description: sections.ACHIEVEMENTS.join("\n"), date: "", issuer: "" }];
+        confidence.achievements = 'low';
     }
 
     // Advanced Normalization for Dates
@@ -173,14 +193,12 @@ export async function parseResumeFile(file) {
         let currentExp = null;
         let conf = {};
 
-        sections.EXPERIENCE.forEach((line, idx) => {
+        sections.EXPERIENCE.forEach((line) => {
             const hasBound = line.match(dateBoundPattern) || line.match(yearOnlyPattern);
-
-            // Assume uppercase lines or short lines are companies/titles
-            const isTitleOrCompany = line.length > 3 && line.length < 50 && !line.includes('•') && !line.includes('·');
+            const isTitleOrCompany = line.length > 3 && line.length < 60 && !line.includes('•') && !line.includes('·');
 
             if (hasBound || (!currentExp && isTitleOrCompany) || (isTitleOrCompany && currentExp && currentExp.description.length > 30)) {
-                if (currentExp && (currentExp.title || currentExp.company)) {
+                if (currentExp && (currentExp.title || currentExp.company || currentExp.description)) {
                     data.experience.push(currentExp);
                     confidence.experience.push(conf);
                 }
@@ -214,7 +232,7 @@ export async function parseResumeFile(file) {
                 }
             }
         });
-        if (currentExp && (currentExp.title || currentExp.company)) {
+        if (currentExp && (currentExp.title || currentExp.company || currentExp.description)) {
             data.experience.push(currentExp);
             confidence.experience.push(conf);
         }
@@ -231,7 +249,7 @@ export async function parseResumeFile(file) {
             const isNewBlock = hasBound || line.match(uniKeywords) || line.match(degreeKeywords);
 
             if (isNewBlock || !currentEdu) {
-                if (currentEdu && (currentEdu.institution || currentEdu.degree)) {
+                if (currentEdu && (currentEdu.institution || currentEdu.degree || currentEdu.description)) {
                     data.education.push(currentEdu);
                     confidence.education.push(conf);
                 }
@@ -277,21 +295,22 @@ export async function parseResumeFile(file) {
                 }
             }
         });
-        if (currentEdu && (currentEdu.institution || currentEdu.degree)) {
+        if (currentEdu && (currentEdu.institution || currentEdu.degree || currentEdu.description)) {
             data.education.push(currentEdu);
             confidence.education.push(conf);
         }
     }
 
-    // Dump unmapped lines into Custom section so zero data is lost
-    if (sections.UNMAPPED && sections.UNMAPPED.length) {
+    // Dump unmapped lines into unmapped custom area for UI review component
+    const unmappedText = (sections.UNMAPPED || []).join("\n").trim();
+    if (unmappedText) {
         data.customFields = [{
             id: crypto.randomUUID(),
             title: "Unmapped Recovery",
-            description: sections.UNMAPPED.join("\n"),
+            description: unmappedText,
             bullets: []
         }];
     }
 
-    return { parsedData: data, confidence };
+    return { parsedData: data, confidence, textDump: text };
 }
