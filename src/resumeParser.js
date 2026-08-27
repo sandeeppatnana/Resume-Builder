@@ -1,23 +1,24 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import mammoth from 'mammoth';
 import { defaultData } from './App';
-
-// Initialize the PDF.js headless worker safely for Webpack/CRA environments.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 /**
  * Extracts raw textual array blocks from DOCX or PDF payloads.
  */
-async function extractRawText(file) {
+async function extractRawText(file, onProgress) {
     const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
     if (extension === '.docx' || extension === '.doc') {
+        if (onProgress) onProgress("Parsing Word Document...");
+        const { default: mammoth } = await import('mammoth');
         const arrayBuffer = await file.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer });
-        return result.value || "";
+        return { textStr: result.value || "", rawOcrText: "", isOcrTriggered: false };
     }
 
     if (extension === '.pdf') {
+        if (onProgress) onProgress("Extracting PDF Text Layer...");
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
         const arrayBuffer = await file.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
         const pdf = await loadingTask.promise;
@@ -32,7 +33,6 @@ async function extractRawText(file) {
             let lastY = -1;
             let pageText = "";
 
-            // Reconstruct genuine newlines by tracking the Y-coordinate matrix from the PDF canvas!
             for (let item of textContent.items) {
                 if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 4) {
                     pageText += "\n";
@@ -45,22 +45,77 @@ async function extractRawText(file) {
             textStr += pageText + "\n";
         }
 
-        return textStr;
+        const totalWords = textStr.split(/\s+/).filter(Boolean).length;
+        const singleChars = (textStr.match(/\b[A-Za-z]\b/g) || []).length;
+
+        let isPoorExtraction = false;
+        if (textStr.trim().length < 250) isPoorExtraction = true;
+        if (totalWords > 0 && (singleChars / totalWords) > 0.35) isPoorExtraction = true;
+
+        if (isPoorExtraction) {
+            try {
+                if (onProgress) onProgress("Initializing Optical Character Recognition (OCR)...");
+                const { createWorker } = await import('tesseract.js');
+                const worker = await createWorker('eng');
+                let ocrText = "";
+
+                for (let i = 1; i <= numPages; i++) {
+                    if (onProgress) onProgress(`OCR Processing Page ${i} / ${numPages}...`);
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d", { willReadFrequently: true });
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    const { data: { text } } = await worker.recognize(canvas);
+                    ocrText += text + "\n";
+                }
+
+                if (onProgress) onProgress("Terminating OCR Worker...");
+                await worker.terminate();
+
+                if (ocrText.trim().length > textStr.trim().length) {
+                    if (onProgress) onProgress("Merging Advanced Extraction...");
+                    return { textStr: ocrText, rawOcrText: ocrText, isOcrTriggered: true };
+                }
+            } catch (err) {
+                console.warn("OCR Fallback failed, returning native text.", err);
+            }
+        }
+
+        if (onProgress) onProgress("Analyzing Native Data...");
+        return { textStr: textStr, rawOcrText: "", isOcrTriggered: false };
     }
 
     throw new Error("Unsupported file format for pure extraction.");
+}
+
+function formatOcrText(rawText) {
+    if (!rawText) return "";
+    let clean = rawText
+        .split('\n')
+        .map(l => l.trimEnd()) // Keep some leading spaces for bullets occasionally, mainly trim trailing
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/^(PROFESSIONAL EXPERIENCE|EXPERIENCE|WORK HISTORY|EMPLOYMENT|EDUCATION|ACADEMIC|SKILLS|TECHNICAL SKILLS|PROJECTS|CERTIFICATIONS|LANGUAGES|SUMMARY|PROFILE|ACHIEVEMENTS)[\s\n]*$/gmi, '\n\n$1\n\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    return clean;
 }
 
 /**
  * Maps raw multi-page string into a structured internal JSON mapped precisely against the defaultData template schema.
  * Operates purely using highly deterministic Regex heuristics without calling any LLM API endpoints.
  */
-export async function parseResumeFile(file) {
-    const rawText = await extractRawText(file);
+export async function parseResumeFile(file, onProgress) {
+    const { textStr: rawText, rawOcrText, isOcrTriggered } = await extractRawText(file, onProgress);
     const data = JSON.parse(JSON.stringify(defaultData()));
-    const confidence = { personal: {}, experience: [], education: [], skills: 'low', projects: 'low', certifications: 'low', languages: 'low', achievements: 'low' };
+    const confidence = { personal: {}, experience: [], education: [], skills: 'low', projects: 'low', certifications: 'low', languages: 'low', achievements: 'low', extractionQuality: 0, mappingQuality: 0 };
 
-    if (!rawText || !rawText.trim()) throw new Error("Could not detect valid text inside the document (may be a scanned image).");
+    if (!rawText || !rawText.trim()) throw new Error("Document completely empty or OCR failed to extract meaningful text tokens.");
 
     const rawLines = rawText.split('\n').map(l => l.replace(/\s{2,}/g, '  ').replace(/\s{2,}/g, ' ').trim()).filter(l => l);
     // De-duplication logic
@@ -312,5 +367,40 @@ export async function parseResumeFile(file) {
         }];
     }
 
-    return { parsedData: data, confidence, textDump: text };
+    // Extraction Quality Scoring
+    const countWords = (str) => typeof str === 'string' ? str.trim().split(/\s+/).filter(Boolean).length : 0;
+    const allWordsList = text.split(/\s+/).filter(Boolean);
+    const totalWords = allWordsList.length;
+    let mappedWords = 0;
+
+    mappedWords += countWords(data.personal.fullName);
+    mappedWords += countWords(data.personal.title);
+    mappedWords += countWords(data.personal.email);
+    mappedWords += countWords(data.personal.linkedin);
+    mappedWords += countWords(data.summary);
+
+    data.experience.forEach(e => mappedWords += countWords(e.company) + countWords(e.title) + countWords(e.description));
+    data.education.forEach(e => mappedWords += countWords(e.institution) + countWords(e.degree) + countWords(e.description));
+    data.skillGroups.forEach(g => g.skills.forEach(s => mappedWords += countWords(s)));
+    data.projects?.forEach(p => mappedWords += countWords(p.name) + countWords(p.description));
+    data.certifications?.forEach(c => mappedWords += countWords(c.name) + countWords(c.description));
+
+    const validAlphanumericWords = allWordsList.filter(w => /[A-Za-z0-9]{3,}/.test(w)).length;
+
+    const mappingQualityRaw = totalWords > 0 ? (mappedWords / totalWords) * 100 : 0;
+    const extractionQualityRaw = totalWords > 0 ? (validAlphanumericWords / totalWords) * 100 : 0;
+
+    confidence.mappingQuality = Math.min(100, Math.round(mappingQualityRaw));
+    confidence.extractionQuality = Math.min(100, Math.round(extractionQualityRaw * 1.2)); // Factor in numbers/symbols
+
+    if (onProgress) onProgress("Ready!");
+    return {
+        parsedData: data,
+        confidence,
+        textDump: text,
+        rawOcrText,
+        isOcrTriggered,
+        rawExtractedText: rawText,
+        formattedOcrText: formatOcrText(rawText)
+    };
 }

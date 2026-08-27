@@ -109,8 +109,19 @@ function normalizeSectionOrder(order, customFields = []) {
 }
 
 async function readResumeStorage() {
-  if (window.storage?.get) return window.storage.get("resume-data", false);
-  return { value: window.localStorage.getItem(STORAGE_KEY) };
+  if (window.storage?.get) {
+    const p = window.storage.get("resume-data", false);
+    if (p && typeof p.then === 'function') {
+      return Promise.race([p, new Promise((_, reject) => setTimeout(() => reject(new Error("Storage timeout")), 2000))]);
+    }
+    return p;
+  }
+
+  try {
+    return { value: window.localStorage.getItem(STORAGE_KEY) };
+  } catch (e) {
+    return { value: null };
+  }
 }
 
 async function writeResumeStorage(value) {
@@ -2639,6 +2650,7 @@ function ImportScreen({ onBack, onComplete, initialFile }) {
 
 function ParseScreen({ file, onCancel, onComplete }) {
   const [error, setError] = useState("");
+  const [progressMsg, setProgressMsg] = useState("Initializing Engine...");
 
   useEffect(() => {
     let active = true;
@@ -2647,7 +2659,9 @@ function ParseScreen({ file, onCancel, onComplete }) {
       return;
     }
 
-    parseResumeFile(file).then(mappedData => {
+    parseResumeFile(file, (msg) => {
+      if (active) setProgressMsg(msg);
+    }).then(mappedData => {
       if (active) onComplete(mappedData);
     }).catch(err => {
       console.error(err);
@@ -2677,7 +2691,10 @@ function ParseScreen({ file, onCancel, onComplete }) {
               <Settings size={32} className="animate-spin duration-3000" />
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 mb-3">Parsing Resume...</h2>
-            <p className="text-sm font-medium text-slate-600 mb-8 px-4">Extracting text from <span className="font-bold text-slate-800 break-all">{file?.name}</span>. The machine learning mapping pipeline is isolating objects.</p>
+            <p className="text-sm font-medium text-slate-600 mb-4 px-4">Extracting text from <span className="font-bold text-slate-800 break-all">{file?.name}</span>.</p>
+            <div className="inline-block mt-2 px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-indigo-800 text-sm font-bold rounded-lg shadow-sm">
+              {progressMsg}
+            </div>
             <button onClick={onCancel} className="text-sm font-bold px-6 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-xl transition-colors">
               Cancel Extraction
             </button>
@@ -2691,6 +2708,17 @@ function ParseScreen({ file, onCancel, onComplete }) {
 function ReviewImportScreen({ data: payload, onApply, onCancel }) {
   const [data, setData] = useState(payload?.parsedData || payload || {});
   const confidence = payload?.confidence || {};
+  const rawExtractedText = payload?.rawExtractedText || payload?.fullText || payload?.rawOcrText || "";
+  const formattedOcrText = payload?.formattedOcrText || rawExtractedText;
+
+  const [ocrTextLocal, setOcrTextLocal] = useState(formattedOcrText);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyOcr = () => {
+    navigator.clipboard.writeText(ocrTextLocal);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handlePersonalChange = (key, value) => {
     setData(prev => ({
@@ -2733,8 +2761,22 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
             <Check size={32} />
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Review Extract</h1>
-          <p className="text-slate-500 mt-3 max-w-xl mx-auto font-medium">Verify the mapped extracted fields below. You can correct any mappings manually before applying them to your workspace.</p>
-          {lowCount > 0 && <span className="inline-block mt-4 px-4 py-1.5 bg-amber-100 text-amber-700 font-bold text-sm rounded-full border border-amber-200 shadow-sm animate-pulse">{lowCount} field(s) flagged for low offline confidence</span>}
+
+          <div className="mt-3 flex items-center justify-center gap-3">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full shadow-sm font-bold text-sm" title="Raw structural text robustness">
+              Extraction Quality: {confidence?.extractionQuality || 0}%
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full shadow-sm font-bold text-sm" title="Parsed fields accurately localized">
+              Mapping Quality: {confidence?.mappingQuality || 0}%
+            </div>
+            {lowCount > 0 && (
+              <span className="inline-flex items-center px-4 py-1.5 bg-amber-100 text-amber-800 font-bold text-sm rounded-full border border-amber-200 shadow-sm animate-pulse">
+                {lowCount} fields flagged
+              </span>
+            )}
+          </div>
+
+          <p className="text-slate-500 mt-5 max-w-xl mx-auto font-medium">Verify the mapped extracted fields below. You can correct any mappings manually before applying them to your workspace.</p>
         </div>
 
         <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm mb-8">
@@ -2822,6 +2864,28 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
                 ))}
               </div>
             )}
+
+            <div className="mt-8 p-5 rounded-xl border-2 border-slate-200 bg-white shadow-sm relative">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <FileText size={18} /> OCR Text <span className="font-normal text-slate-500">(Formatted Reference)</span>
+                </h4>
+                <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">{(ocrTextLocal || "").length} chars</span>
+                  <button onClick={handleCopyOcr} className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 min-w-[130px] ${copied ? 'bg-green-100 text-green-700' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}>
+                    {copied ? <><Check size={14} /> Copied!</> : <><Search size={14} /> Copy All Text</>}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                className="w-full font-mono text-xs text-slate-600 bg-slate-50 p-4 border border-slate-200 rounded-lg outline-none resize-y focus:ring-2 focus:ring-indigo-300 transition-shadow leading-relaxed whitespace-pre-wrap"
+                rows={15}
+                value={ocrTextLocal}
+                onChange={(e) => setOcrTextLocal(e.target.value)}
+                placeholder="Raw textual layout extraction structure."
+              />
+            </div>
+
           </div>
         </div>
 
@@ -2837,13 +2901,27 @@ function ReviewImportScreen({ data: payload, onApply, onCancel }) {
           </button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
 export default function App() {
-  const [appScreen, setAppScreenState] = useState(() => window.localStorage.getItem('appScreen_v1') || 'landing');
-  const setAppScreen = (screen) => { setAppScreenState(screen); window.localStorage.setItem('appScreen_v1', screen); };
+  const [appScreen, setAppScreenState] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem('appScreen_v1');
+      if (stored === 'parse-queue' || stored === 'review-import' || stored === 'import') {
+        return 'landing';
+      }
+      return stored || 'landing';
+    } catch {
+      return 'landing';
+    }
+  });
+
+  const setAppScreen = (screen) => {
+    setAppScreenState(screen);
+    try { window.localStorage.setItem('appScreen_v1', screen); } catch { }
+  };
 
   const [importFile, setImportFile] = useState(null);
   const [importExtractedData, setImportExtractedData] = useState(null);
@@ -3033,6 +3111,15 @@ export default function App() {
   );
 
   const previewPane = <PreviewPanel data={data} template={template} onPageSettingsChange={updatePageSettings} />;
+
+  if (!loaded) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="w-16 h-16 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-medium animate-pulse">Initializing Workspace...</p>
+      </div>
+    );
+  }
 
   if (appScreen === 'landing') {
     return (
